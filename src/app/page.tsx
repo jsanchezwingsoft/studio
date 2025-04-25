@@ -1,16 +1,14 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchWrapper } from "@/utils/fetchWrapper";
 import { Button } from '@/components/ui/button';
-import { fetchWrapper, isAuthenticated } from "@/utils/fetchWrapper";
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Menu } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail } from 'lucide-react';
 import { VideoBackground } from '@/components/background/video-background';
 
 export default function HomePage() {
-    const [isAuthenticatedState, setIsAuthenticated] = useState<boolean>(false);
-    const [userInitials, setUserInitials] = useState<string>('');
-    const [username, setUsername] = useState<string | null>('');
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);   
+    const [email, setEmail] = useState<string>(''); 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const router = useRouter();
 
@@ -20,37 +18,28 @@ export default function HomePage() {
         sessionStorage.removeItem('accessToken');
         sessionStorage.removeItem('refreshToken');
         setIsAuthenticated(false);
-        sessionStorage.removeItem('username');
+        sessionStorage.removeItem('email');
         if (!accessToken || !refreshToken) {
             router.push('/login');
-            return;
+        } else {
+            try {
+                await fetchWrapper(
+                    'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/logout',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ refresh_token: refreshToken }),
+                    }
+                );
+                setIsAuthenticated(false);
+                router.push('/login');
+            } catch (error) {
+                setIsAuthenticated(false);
+                router.push('/login');
+            }
         }
-        try {
-            await fetchWrapper(
-                'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/logout',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ refresh_token: refreshToken }),
-                }
-            );
-            setIsAuthenticated(false);
-            router.push('/login');
-        } catch (error) {
-            setIsAuthenticated(false);
-            router.push('/login');
-        }
-    };
-
-    const getUserInitials = (username: string | null) => {
-        if (!username) {
-            return '??';
-        }
-        const names = username.split(' ');
-        const initials = names.map(name => name.charAt(0).toUpperCase()).join('');
-        return initials.substring(0, 2);
     };
 
     const toggleSidebar = () => {
@@ -58,32 +47,46 @@ export default function HomePage() {
     };
 
     useEffect(() => {
-        let storedUsername = sessionStorage.getItem('username');
         const token = sessionStorage.getItem('accessToken');
-        // Si no hay token o no es válido, redirige
-        if (!token || !isAuthenticated(token)) {
+        const storedEmail = sessionStorage.getItem('email');
+        if (token) {
+            setIsAuthenticated(true);
+            setEmail(storedEmail || '');
+        } else {
+            setIsAuthenticated(false);
             sessionStorage.removeItem('accessToken');
             sessionStorage.removeItem('refreshToken');
-            setIsAuthenticated(false);
-            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('email');
             router.push('/login');
-            return;
         }
-        // Si hay username en storage, muestra iniciales
-        if (storedUsername) {
-            setUserInitials(getUserInitials(storedUsername));
-            setUsername(storedUsername);
-        }
-        // Si quieres obtener el username de otra fuente, hazlo aquí (por ejemplo, decodificando el JWT)
-        setIsAuthenticated(true);
     }, [router]);
 
-    if (!isAuthenticatedState) {
+    if (!isAuthenticated) {
         return <div className="flex items-center justify-center min-h-screen"><p className="text-foreground z-10">Loading...</p></div>;
     }
 
+    // CSS para el efecto heartbeat (puedes moverlo a tu CSS global)
+    const heartbeatStyle = `
+    @keyframes heartbeat {
+      0%, 100% {
+        box-shadow: 0 0 0 0 #01797999, 0 0 0 0 #01797955;
+      }
+      40% {
+        box-shadow: 0 0 0 8px #01797933, 0 0 0 16px #01797922;
+      }
+      60% {
+        box-shadow: 0 0 0 4px #01797966, 0 0 0 8px #01797933;
+      }
+    }
+    .heartbeat {
+      animation: heartbeat 1.5s infinite;
+    }
+    `;
+
     return (
         <div className="relative h-screen w-screen overflow-hidden">
+            {/* Inyecta el CSS para el efecto heartbeat */}
+            <style>{heartbeatStyle}</style>
             <VideoBackground />
             <div className="relative flex min-h-screen z-10">
                 <aside className={`sidebar transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-20'} p-4 flex flex-col justify-between items-center`}>
@@ -91,14 +94,20 @@ export default function HomePage() {
                         {isSidebarOpen ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />}
                     </Button>
                     <div className="flex flex-col items-center w-full mt-10">
-                        <Avatar className="mb-8 relative">
-                            <AvatarFallback className='text-primary-foreground bg-primary font-bold'>{userInitials}</AvatarFallback>
-                            {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden text-white'>{username}</span>}
-                        </Avatar>
+                        <div className='flex gap-2 items-center mb-8'>
+                            {isSidebarOpen && (
+                                <span
+                                    className='px-4 py-2 rounded-full font-semibold text-white bg-[#017979] shadow-lg border border-white heartbeat'
+                                    style={{ boxShadow: '0 0 0 0 #017979' }}
+                                >
+                                    {email || 'No email'}
+                                </span>
+                            )}
+                        </div>
                         <nav className="space-y-4 flex flex-col items-center w-full">
                             <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/40 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Dashboard">
                                 <Home className="h-5 w-5 flex-shrink-0 text-white" />
-                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Dashboard</span>}
+                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden '>Dashboard</span>}
                             </Button>
                             <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Mail">
                                 <Mail className="h-5 w-5 flex-shrink-0 text-white"/>
