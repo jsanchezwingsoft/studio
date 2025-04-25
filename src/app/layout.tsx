@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark"> {/* Added dark class for default dark mode */}
-      <body className={`${jetbrains.variable} font-mono antialiased`}> {/* Use mono font class */}
+      <body className={`${jetbrains.variable} font-mono antialiased`}>{/* Use mono font class */}
         {children}
         <Toaster />
       </body>
