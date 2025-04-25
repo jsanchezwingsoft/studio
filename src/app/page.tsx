@@ -1,27 +1,31 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchWrapper } from "@/utils/fetchWrapper";
+import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Button } from '@/components/ui/button';
-import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus } from 'lucide-react';
 import { VideoBackground } from '@/components/background/video-background';
 
 export default function HomePage() {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);   
-    const [email, setEmail] = useState<string>(''); 
+    const [isAuthenticatedState, setIsAuthenticatedState] = useState<boolean>(false);
+    const [email, setEmail] = useState<string>('');
+    const [userRoles, setUserRoles] = useState<string[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
     const router = useRouter();
+    const isAuthenticated = isAuthenticatedState;
 
     const handleLogout = async () => {
         const accessToken = sessionStorage.getItem('accessToken');
         const refreshToken = sessionStorage.getItem('refreshToken');
         sessionStorage.removeItem('accessToken');
         sessionStorage.removeItem('refreshToken');
-        setIsAuthenticated(false);
+        setIsAuthenticatedState(false);
         sessionStorage.removeItem('email');
-        if (!accessToken || !refreshToken) {
-            router.push('/login');
-        } else {
+        sessionStorage.removeItem('username');
+        sessionStorage.removeItem('roles');
+        router.push('/login');
+        if (accessToken && refreshToken) {
             try {
                 await fetchWrapper(
                     'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/logout',
@@ -33,11 +37,8 @@ export default function HomePage() {
                         body: JSON.stringify({ refresh_token: refreshToken }),
                     }
                 );
-                setIsAuthenticated(false);
-                router.push('/login');
             } catch (error) {
-                setIsAuthenticated(false);
-                router.push('/login');
+                // No-op, ya redirigimos arriba
             }
         }
     };
@@ -47,16 +48,23 @@ export default function HomePage() {
     };
 
     useEffect(() => {
+        // Solo validación local del token y email/roles
         const token = sessionStorage.getItem('accessToken');
         const storedEmail = sessionStorage.getItem('email');
+        const storedRoles = sessionStorage.getItem('roles');
         if (token) {
-            setIsAuthenticated(true);
+            setIsAuthenticatedState(true);
             setEmail(storedEmail || '');
+            if (storedRoles) {
+                setUserRoles(JSON.parse(storedRoles));
+            }
         } else {
-            setIsAuthenticated(false);
+            setIsAuthenticatedState(false);
             sessionStorage.removeItem('accessToken');
             sessionStorage.removeItem('refreshToken');
             sessionStorage.removeItem('email');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('roles');
             router.push('/login');
         }
     }, [router]);
@@ -83,9 +91,10 @@ export default function HomePage() {
     }
     `;
 
+    const canSeeAdminButtons = userRoles.includes('superadmin') || userRoles.includes('contributor');
+
     return (
         <div className="relative h-screen w-screen overflow-hidden">
-            {/* Inyecta el CSS para el efecto heartbeat */}
             <style>{heartbeatStyle}</style>
             <VideoBackground />
             <div className="relative flex min-h-screen z-10">
@@ -107,11 +116,39 @@ export default function HomePage() {
                         <nav className="space-y-4 flex flex-col items-center w-full">
                             <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/40 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Dashboard">
                                 <Home className="h-5 w-5 flex-shrink-0 text-white" />
-                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden '>Dashboard</span>}
+                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Dashboard</span>}
                             </Button>
-                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Mail">
+                            {canSeeAdminButtons && (
+                                <Button
+                                    variant="ghost"
+                                    className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`}
+                                    title="Administrator User"
+                                    onClick={() => setAreAdminButtonsVisible(!areAdminButtonsVisible)}
+                                >
+                                    <Users className="h-5 w-5 flex-shrink-0 text-white"/>
+                                    {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Administrator User</span>}                                  
+                                </Button>
+                            )}
+                            {areAdminButtonsVisible && canSeeAdminButtons && (
+                                <div className="flex flex-col items-center w-full">
+                                    <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Create User">
+                                        <UserPlus className="h-5 w-5 flex-shrink-0 text-white"/>
+                                        {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Create User</span>}
+                                    </Button>
+                                    <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Roles">
+                                        <Users className="h-5 w-5 flex-shrink-0 text-white"/>
+                                        {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Roles</span>}
+                                    </Button>
+                                </div>
+                            )}
+                            {/* Otros botones visibles para todos */}
+                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Button 1">
+                                <Mail className="h-5 w-5 flex-shrink-0 text-white" />
+                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Button 1</span>}                                
+                            </Button>
+                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Button 2">
                                 <Mail className="h-5 w-5 flex-shrink-0 text-white"/>
-                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Mail</span>}
+                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Button 2</span>}
                             </Button>
                         </nav>
                     </div>
@@ -134,4 +171,4 @@ export default function HomePage() {
             </div>
         </div>
     );
-};
+}

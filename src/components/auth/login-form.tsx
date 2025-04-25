@@ -110,6 +110,7 @@ export function LoginForm() {
       sessionStorage.setItem('refreshToken', data.refresh_token);
       sessionStorage.setItem('username', data.user.username);
       sessionStorage.setItem('email', data.user.email);
+      sessionStorage.setItem('roles', JSON.stringify(data.user.role));
       router.push('/');
     } catch (error) {
       console.error('Caught error during login fetch:', error);
