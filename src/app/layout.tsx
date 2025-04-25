@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { JetBrains_Mono } from "next/font/google";
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { VideoBackground } from '@/components/background/video-background'; // Import the new component
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
@@ -20,13 +21,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark h-full">
-      {/* Apply h-full to html and body to ensure they take full viewport height */}
-      <body className={`${jetbrains.variable} font-mono antialiased flex flex-col min-h-screen`}>
-        {/* Use flex flex-col and min-h-screen to allow content to grow */}
-        <div className="flex-grow flex flex-col"> {/* Add a flex-grow container */}
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body className={`${jetbrains.variable} font-mono antialiased relative`}> {/* Add relative positioning */}
+        <VideoBackground /> {/* Add the video background */}
+        <main className="relative z-10 flex flex-col min-h-screen"> {/* Ensure content is above background and takes full height */}
           {children}
-        </div>
+        </main>
         <Toaster />
       </body>
     </html>
