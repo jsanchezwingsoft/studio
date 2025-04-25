@@ -146,13 +146,14 @@
     border-color: hsla(var(--primary), 0.8);
   }
   .sidebar {
-    background: hsla(var(--sidebar-background));
+    background: hsl(var(--background)); /* Change to solid background */
     border-right: 2px solid hsla(var(--sidebar-border));
     box-shadow: 0 0 24px 0 hsla(var(--primary), 0.10);
     border-radius: 0 var(--radius) var(--radius) 0;
-    backdrop-filter: blur(14px) saturate(1.1);
+    backdrop-filter: none; /* Remove backdrop filter */
     position: relative;
     overflow: hidden;
+    transition: width 0.3s ease-in-out; /* Add transition for width */
   }
   .sidebar::before {
     /* Neon vertical glow bar */
