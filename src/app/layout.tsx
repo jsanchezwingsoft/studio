@@ -1,9 +1,14 @@
 import type {Metadata} from 'next';
-import { Inter } from "next/font/google"
+import { JetBrains_Mono } from "next/font/google" // Updated font import
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+// Updated font initialization
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono", // Use mono variable
+  weight: ["400", "700"], // Include weights if needed
+})
 
 
 export const metadata: Metadata = {
@@ -17,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+    <html lang="en" suppressHydrationWarning className="dark"> {/* Added dark class for default dark mode */}
+      <body className={`${jetbrains.variable} font-mono antialiased`}> {/* Use mono font class */}
         {children}
         <Toaster />
       </body>

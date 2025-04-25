@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }), // Increased min length
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -56,14 +56,15 @@ export function LoginForm() {
     // For demonstration, always show success
     toast({
       title: "Login Successful",
-      description: "Redirecting to dashboard...",
+      description: "Access Granted. Redirecting...",
+      variant: 'default', // Use default for success
     });
 
     // Example error handling:
     // toast({
     //   variant: "destructive",
     //   title: "Login Failed",
-    //   description: "Invalid email or password.",
+    //   description: "Authentication Error: Invalid Credentials.",
     // });
 
     setIsLoading(false);
@@ -74,11 +75,11 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md card"> {/* Added 'card' class */}
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold text-primary">
+        <CardTitle className="text-2xl font-bold text-primary cyber-flicker"> {/* Applied cyber-flicker */}
           MiniHack Analyzer Login
         </CardTitle>
         <CardDescription>
-          Enter your email and password to access your account
+          Authenticate to access the system
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -89,14 +90,14 @@ export function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-foreground/80">Email</FormLabel> {/* Adjusted label color */}
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="m@example.com"
-                        className="pl-10"
+                        placeholder="user@domain.com" // Updated placeholder
+                        className="pl-10" // Added input class
                         {...field}
                         aria-label="Email"
                       />
@@ -111,14 +112,14 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel className="text-foreground/80">Password</FormLabel> {/* Adjusted label color */}
                    <div className="relative">
                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
+                        placeholder="••••••••••••" // Updated placeholder
+                        className="pl-10" // Added input class
                         {...field}
                         aria-label="Password"
                        />
@@ -130,20 +131,20 @@ export function LoginForm() {
             />
             <Button type="submit" className="w-full btn-primary" disabled={isLoading}> {/* Updated class */}
               {isLoading ? (
-                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
               ) : (
                 <LogIn className="mr-2 h-4 w-4" />
               )}
-              {isLoading ? 'Logging in...' : 'Login'}
+              {isLoading ? 'Authenticating...' : 'Login'}
             </Button>
           </form>
         </Form>
       </CardContent>
        <CardFooter className="flex justify-center">
-         <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 hover:underline">
+         <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 hover:underline transition-colors"> {/* Added transition */}
             Forgot Password?
           </Link>
       </CardFooter>

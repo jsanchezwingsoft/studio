@@ -56,6 +56,7 @@ export function ForgotPasswordForm() {
     toast({
       title: "Password Reset Email Sent",
       description: `If an account exists for ${values.email}, you will receive password reset instructions.`,
+      variant: 'default', // Use default for success
     });
     setIsSubmitted(true); // Show confirmation message/state
 
@@ -72,7 +73,7 @@ export function ForgotPasswordForm() {
   return (
     <Card className="w-full max-w-md card"> {/* Added 'card' class */}
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold text-primary">
+        <CardTitle className="text-2xl font-bold text-primary cyber-flicker"> {/* Applied cyber-flicker */}
           Forgot Your Password?
         </CardTitle>
         <CardDescription>
@@ -90,14 +91,14 @@ export function ForgotPasswordForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-foreground/80">Email</FormLabel> {/* Adjusted label color */}
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="m@example.com"
-                          className="pl-10"
+                          placeholder="user@domain.com" // Updated placeholder
+                          className="pl-10" // Added input class
                           {...field}
                           aria-label="Email"
                         />
@@ -109,7 +110,7 @@ export function ForgotPasswordForm() {
               />
               <Button type="submit" className="w-full btn-primary" disabled={isLoading}> {/* Updated class */}
                 {isLoading ? (
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -128,7 +129,7 @@ export function ForgotPasswordForm() {
         )}
       </CardContent>
       <CardFooter className="flex justify-center">
-        <Link href="/login" className="text-sm text-primary hover:text-primary/80 hover:underline flex items-center gap-1">
+        <Link href="/login" className="text-sm text-primary hover:text-primary/80 hover:underline flex items-center gap-1 transition-colors"> {/* Added transition */}
           <ArrowLeft className="h-4 w-4" /> Back to Login
         </Link>
       </CardFooter>
