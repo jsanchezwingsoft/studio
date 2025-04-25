@@ -107,6 +107,7 @@ export function LoginForm() {
         variant: 'default',
       });
       sessionStorage.setItem('accessToken', data.access_token);
+      sessionStorage.setItem('refreshToken', data.refresh_token);
       router.push('/');
     } catch (error) {
       console.error('Caught error during login fetch:', error);
