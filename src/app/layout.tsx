@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter } from "next/font/google"; // Changed font
+import { JetBrains_Mono } from "next/font/google";
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
-// Changed font setup
-const inter = Inter({
+const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-sans", // Use --font-sans convention
+  variable: "--font-mono",
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -19,11 +19,14 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Ensure no whitespace between tags and use the new font variable
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+    <html lang="en" suppressHydrationWarning className="dark h-full">
+      {/* Apply h-full to html and body to ensure they take full viewport height */}
+      <body className={`${jetbrains.variable} font-mono antialiased flex flex-col min-h-screen`}>
+        {/* Use flex flex-col and min-h-screen to allow content to grow */}
+        <div className="flex-grow flex flex-col"> {/* Add a flex-grow container */}
+          {children}
+        </div>
         <Toaster />
       </body>
     </html>

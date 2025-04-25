@@ -1,27 +1,35 @@
 'use client'; // Error components must be Client Components
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 
 export default function Error({
   error,
   reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+}: { error: (Error & { digest?: string }) | null; reset: () => void }) {
+  const [hasError, setHasError] = useState<boolean>(false);
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error);
-  }, [error]);
+    if (error) {
+      console.error('Error caught by Error boundary:', error);
+      setHasError(true);
+    }
+  }, [error, setHasError]);
 
+  const handleReset = () => {
+    setHasError(false);
+    reset();
+  };
   return (
-     <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
+    <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
       <Card className="w-full max-w-md text-center shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-destructive">Something went wrong!</CardTitle>
-          <CardDescription>An unexpected error occurred.</CardDescription>
+          <CardTitle className="text-2xl font-bold text-destructive">
+            Something went wrong!
+          </CardTitle>
+          <CardDescription>
+            An unexpected error occurred.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
@@ -29,15 +37,17 @@ export default function Error({
           </p>
            {/* Optionally display digest in development */}
           {process.env.NODE_ENV === 'development' && error.digest && (
-            <p className="mt-2 text-xs text-muted-foreground">Digest: {error.digest}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Digest: {error.digest}
+            </p>
           )}
+        {error == null && (
+          <p className='text-sm text-muted-foreground'>An unknown error occurred.</p>
+        )}
         </CardContent>
         <CardFooter className="flex justify-center">
           <Button
-            onClick={
-              // Attempt to recover by trying to re-render the segment
-              () => reset()
-            }
+            onClick={handleReset}
             variant="destructive"
           >
             Try again

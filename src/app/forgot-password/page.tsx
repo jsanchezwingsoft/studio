@@ -2,7 +2,8 @@ import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
 
 export default function ForgotPasswordPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4"> {/* Use themed background */}
+    // Use flex-grow to ensure this container fills the space provided by the layout
+    <main className="flex flex-grow flex-col items-center justify-center p-4 animate-fade-in">
       <ForgotPasswordForm />
     </main>
   );
