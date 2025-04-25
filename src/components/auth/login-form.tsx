@@ -72,6 +72,7 @@ export function LoginForm() {
     console.log('Login attempt with:', values); // Keep for debugging form values
 
     const loginEndpoint = "https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/login";
+    console.log(`Attempting to POST to: ${loginEndpoint}`); // Log the endpoint
 
     try {
       const response = await fetch(loginEndpoint, {
@@ -92,19 +93,25 @@ export function LoginForm() {
         // mode: 'cors',
       });
 
+      console.log('Fetch response status:', response.status); // Log response status
+
       if (!response.ok) {
         let errorMessage = `Login failed: ${response.statusText} (Status: ${response.status})`;
+        let errorData: ApiError | null = null;
         try {
-          const errorData: ApiError = await response.json();
+          errorData = await response.json();
           // Handle both string and structured error details
-          if (typeof errorData.detail === 'string') {
+          if (typeof errorData?.detail === 'string') {
             errorMessage = errorData.detail;
-          } else if (Array.isArray(errorData.detail) && errorData.detail[0]?.msg) {
+          } else if (Array.isArray(errorData?.detail) && errorData.detail[0]?.msg) {
              errorMessage = errorData.detail[0].msg;
           }
+          console.error('API Error Response Body:', errorData); // Log parsed error
         } catch (e) {
           // If parsing error JSON fails, stick with the status text
-          console.error("Failed to parse error response:", e);
+          console.error("Failed to parse error response JSON:", e);
+          const textResponse = await response.text(); // Attempt to get raw text response
+          console.error('API Error Response Text:', textResponse);
         }
          // Add specific check for common CORS/Network issues indicated by status 0
          if (response.status === 0) {
@@ -115,7 +122,7 @@ export function LoginForm() {
 
       // Login successful
       const data: LoginResponse = await response.json();
-      console.log('Login successful:', data); // Log the response data for inspection
+      console.log('Login successful, API Response:', data); // Log the success response data
 
       // --- Token and User Data Handling ---
       // In a real app, store tokens securely (e.g., httpOnly cookies handled by the server,
@@ -133,12 +140,17 @@ export function LoginForm() {
       // setTimeout(() => router.push('/dashboard'), 1000); // Example redirect
 
     } catch (error) {
-      console.error('Login error details:', error);
-      // Provide a more informative message for TypeError: Failed to fetch
+      // Log the raw error object for detailed inspection
+      console.error('Caught error during login fetch:', error);
+
       let toastMessage = "An unexpected error occurred. Please try again.";
+
+       // Specifically handle the 'Failed to fetch' TypeError
        if (error instanceof TypeError && error.message === 'Failed to fetch') {
-           toastMessage = 'Network error: Could not connect to the server. Please check your connection or if the server is running. CORS policy might also be blocking the request (check browser console).';
+           toastMessage = 'Network error: Could not connect to the server. This might be due to a network issue, the server being down, or a CORS policy blocking the request. Please check your network connection and the browser console (Network tab) for more details (e.g., CORS errors). The backend server MUST be configured to allow requests from this frontend origin.';
+           console.error("Detailed 'Failed to fetch' error likely indicates Network or CORS issue. Check the browser's Network tab.");
        } else if (error instanceof Error) {
+           // Use the message from other Error types
            toastMessage = error.message;
        }
 
@@ -235,4 +247,3 @@ export function LoginForm() {
     </Card>
   );
 }
-
