@@ -19,6 +19,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Ensure no whitespace between tags and that html/body are present
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <body className={`${jetbrains.variable} font-mono antialiased`}>
