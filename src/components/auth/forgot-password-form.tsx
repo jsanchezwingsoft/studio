@@ -70,7 +70,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-lg">
+    <Card className="w-full max-w-md card"> {/* Added 'card' class */}
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold text-primary">
           Forgot Your Password?
@@ -107,7 +107,7 @@ export function ForgotPasswordForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+              <Button type="submit" className="w-full btn-primary" disabled={isLoading}> {/* Updated class */}
                 {isLoading ? (
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

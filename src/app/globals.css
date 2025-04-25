@@ -3,81 +3,97 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Arial, Helvetica, sans-serif;
+  letter-spacing: 0.01em;
+  background: linear-gradient(120deg, hsl(220, 60%, 98%) 0%, hsl(200, 100%, 98%) 100%);
+  min-height: 100vh;
 }
 
 @layer base {
   :root {
-    /* Light Theme - Tech-Inspired & Clean */
-    --background: 210 20% 98%; /* Very Light Cool Grey */
-    --foreground: 220 10% 15%; /* Very Dark Blue-Grey */
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 220 10% 15%;
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 220 10% 15%;
-    --primary: 225 70% 55%; /* Vibrant Blue */
+    /* --- Modern Neon Glassmorphism Theme --- */
+    --background: 220 60% 98%; /* Soft blue-white */
+    --foreground: 230 20% 18%; /* Deep navy */
+    --card: 0 0% 100% / 0.7; /* Glassy white */
+    --card-foreground: 230 20% 18%;
+    --popover: 0 0% 100% / 0.8;
+    --popover-foreground: 230 20% 18%;
+
+    --primary: 200 100% 55%; /* Neon Cyan */
     --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 210 20% 94%; /* Light Cool Grey */
-    --secondary-foreground: 220 10% 30%; /* Dark Grey */
-    --muted: 210 20% 90%; /* Medium Light Grey */
-    --muted-foreground: 210 15% 50%; /* Medium Grey */
-    --accent: 260 70% 60%; /* Vibrant Purple */
+    --secondary: 260 100% 92%; /* Soft purple-blue */
+    --secondary-foreground: 230 20% 18%; /* Deep navy */
+    --muted: 220 16% 90%; /* Pale blue-grey */
+    --muted-foreground: 230 10% 40%; /* Muted navy */
+
+    --accent: 295 100% 60%; /* Neon Magenta */
     --accent-foreground: 0 0% 100%; /* White */
-    --destructive: 0 75% 55%; /* Strong Red */
+    --destructive: 0 90% 62%; /* Vibrant Red */
     --destructive-foreground: 0 0% 100%; /* White */
-    --border: 210 20% 85%; /* Light Grey Border */
-    --input: 210 20% 85%;
-    --ring: 225 70% 55%; /* Primary Blue for focus rings */
-    --chart-1: 225 70% 65%; /* Lighter Blue */
-    --chart-2: 260 70% 70%; /* Lighter Purple */
-    --chart-3: 150 60% 50%; /* Teal/Green */
-    --chart-4: 35 85% 60%; /* Orange */
-    --chart-5: 190 65% 55%; /* Cyan */
-    --radius: 0.5rem;
-    --sidebar-background: 220 15% 96%; /* Slightly darker very light grey */
-    --sidebar-foreground: 220 10% 20%; /* Dark Blue-Grey */
-    --sidebar-primary: 225 70% 55%; /* Primary Blue */
-    --sidebar-primary-foreground: 0 0% 100%; /* White */
-    --sidebar-accent: 260 70% 60%; /* Accent Purple */
-    --sidebar-accent-foreground: 0 0% 100%; /* White */
-    --sidebar-border: 210 20% 90%; /* Lighter grey border */
-    --sidebar-ring: 225 70% 55%; /* Primary Blue ring */
+
+    --border: 220 20% 85%; /* Subtle blue border */
+    --input: 220 20% 90%;
+    --ring: 200 100% 55%; /* Neon Cyan for focus */
+
+    /* Chart Colors: Vibrant, modern */
+    --chart-1: 200 100% 55%; /* Neon Cyan */
+    --chart-2: 295 100% 60%; /* Neon Magenta */
+    --chart-3: 50 100% 60%;  /* Neon Yellow */
+    --chart-4: 140 100% 50%; /* Neon Green */
+    --chart-5: 340 100% 60%; /* Neon Pink */
+
+    --radius: 1.25rem; /* More rounded for glassmorphism */
+
+    /* Sidebar: Glassy, with neon accent border */
+    --sidebar-background: 220 60% 98% / 0.7;
+    --sidebar-foreground: 230 20% 18%;
+    --sidebar-primary: 200 100% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 295 100% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 200 100% 55% / 0.3;
+    --sidebar-ring: 295 100% 60%;
   }
 
   .dark {
-    /* Dark Theme - Tech-Inspired & Clean */
-    --background: 220 15% 12%; /* Very Dark Blue-Grey */
-    --foreground: 210 30% 95%; /* Very Light Grey */
-    --card: 220 15% 18%; /* Slightly lighter dark blue-grey */
-    --card-foreground: 210 30% 95%;
-    --popover: 220 15% 18%;
-    --popover-foreground: 210 30% 95%;
-    --primary: 225 75% 65%; /* Brighter Vibrant Blue */
-    --primary-foreground: 220 15% 10%; /* Dark Background */
-    --secondary: 220 10% 30%; /* Medium Dark Grey */
-    --secondary-foreground: 210 30% 90%; /* Lighter Grey */
-    --muted: 220 10% 25%; /* Darker Grey */
-    --muted-foreground: 210 20% 60%; /* Medium Grey */
-    --accent: 260 75% 70%; /* Brighter Vibrant Purple */
-    --accent-foreground: 210 30% 95%; /* Light Foreground */
-    --destructive: 0 70% 60%; /* Brighter Red */
-    --destructive-foreground: 0 0% 100%; /* White */
-    --border: 220 10% 35%; /* Subtle Dark Grey Border */
-    --input: 220 10% 35%;
-    --ring: 225 75% 65%; /* Primary Blue ring */
-    --chart-1: 225 70% 65%; /* Lighter Blue */
-    --chart-2: 260 70% 70%; /* Lighter Purple */
-    --chart-3: 150 60% 60%; /* Brighter Teal/Green */
-    --chart-4: 35 85% 65%; /* Brighter Orange */
-    --chart-5: 190 65% 60%; /* Brighter Cyan */
-    --sidebar-background: 220 15% 15%; /* Slightly darker dark */
-    --sidebar-foreground: 210 30% 92%; /* Slightly dimmer light grey */
-    --sidebar-primary: 225 75% 65%; /* Primary Blue */
-    --sidebar-primary-foreground: 220 15% 10%; /* Dark Background */
-    --sidebar-accent: 260 75% 70%; /* Accent Purple */
-    --sidebar-accent-foreground: 210 30% 95%; /* Light Foreground */
-    --sidebar-border: 220 10% 30%; /* Darker grey border */
-    --sidebar-ring: 225 75% 65%; /* Primary Blue ring */
+    /* --- Dark Neon Glassmorphism Theme --- */
+    --background: 230 20% 10%; /* Deep navy */
+    --foreground: 220 60% 98%; /* White-blue */
+    --card: 230 20% 15% / 0.7; /* Glassy dark */
+    --card-foreground: 220 60% 98%;
+    --popover: 230 20% 15% / 0.8;
+    --popover-foreground: 220 60% 98%;
+
+    --primary: 200 100% 60%; /* Neon Cyan */
+    --primary-foreground: 230 20% 10%; /* Deep navy */
+    --secondary: 260 100% 20%; /* Deep purple-blue */
+    --secondary-foreground: 220 60% 98%;
+    --muted: 230 20% 18%; /* Muted navy */
+    --muted-foreground: 220 60% 80%;
+
+    --accent: 295 100% 65%; /* Neon Magenta */
+    --accent-foreground: 230 20% 10%;
+    --destructive: 0 90% 65%; /* Vibrant Red */
+    --destructive-foreground: 220 60% 98%;
+
+    --border: 220 20% 25%; /* Subtle dark border */
+    --input: 220 20% 25%;
+    --ring: 200 100% 60%; /* Neon Cyan for focus */
+
+    --chart-1: 200 100% 60%; /* Neon Cyan */
+    --chart-2: 295 100% 65%; /* Neon Magenta */
+    --chart-3: 50 100% 60%;  /* Neon Yellow */
+    --chart-4: 140 100% 55%; /* Neon Green */
+    --chart-5: 340 100% 65%; /* Neon Pink */
+
+    --sidebar-background: 230 20% 15% / 0.7;
+    --sidebar-foreground: 220 60% 98%;
+    --sidebar-primary: 200 100% 60%;
+    --sidebar-primary-foreground: 230 20% 10%;
+    --sidebar-accent: 295 100% 65%;
+    --sidebar-accent-foreground: 230 20% 10%;
+    --sidebar-border: 200 100% 60% / 0.3;
+    --sidebar-ring: 295 100% 65%;
   }
 }
 
@@ -87,5 +103,43 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    /* Glassmorphism effect for main background */
+    background: linear-gradient(120deg, hsl(var(--background)) 0%, hsl(200, 100%, 98%) 100%);
+    backdrop-filter: blur(2px);
+  }
+  .card {
+    background: hsla(var(--card));
+    box-shadow: 0 8px 32px 0 hsla(200, 100%, 55%, 0.15);
+    border-radius: var(--radius);
+    border: 1.5px solid hsla(var(--border));
+    backdrop-filter: blur(8px);
+    transition: box-shadow 0.2s;
+  }
+  .card:hover {
+    box-shadow: 0 12px 40px 0 hsla(var(--primary), 0.25);
+    border-color: hsla(var(--primary), 0.7);
+  }
+  .sidebar {
+    background: hsla(var(--sidebar-background));
+    border-right: 2px solid hsla(var(--sidebar-border));
+    box-shadow: 0 0 24px 0 hsla(var(--primary), 0.07);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    backdrop-filter: blur(12px);
+  }
+  .sidebar .active {
+    background: linear-gradient(90deg, hsla(var(--primary), 0.15), transparent);
+    border-left: 4px solid hsl(var(--sidebar-accent));
+    color: hsl(var(--sidebar-accent));
+  }
+  .btn-primary {
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+    color: hsl(var(--primary-foreground));
+    border-radius: calc(var(--radius) / 1.5);
+    box-shadow: 0 2px 8px 0 hsla(var(--primary), 0.12);
+    transition: box-shadow 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 16px 0 hsla(var(--primary), 0.22);
+    transform: translateY(-2px) scale(1.03);
   }
 }
