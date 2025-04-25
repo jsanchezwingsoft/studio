@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono } from "next/font/google";
+import { Inter } from "next/font/google"; // Changed font
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
-const jetbrains = JetBrains_Mono({
+// Changed font setup
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-mono",
-  weight: ["400", "700"],
+  variable: "--font-sans", // Use --font-sans convention
 });
 
 export const metadata: Metadata = {
@@ -19,10 +19,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Ensure no whitespace between tags and that html/body are present
+  // Ensure no whitespace between tags and use the new font variable
   return (
     <html lang="en" suppressHydrationWarning className="dark">
-      <body className={`${jetbrains.variable} font-mono antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>

@@ -2,102 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'JetBrains Mono', 'Fira Mono', 'Menlo', 'Consolas', monospace;
-  letter-spacing: 0.01em;
-  background: linear-gradient(120deg, #0a192f 0%, #172a46 100%);
-  min-height: 100vh;
-  /* Sutil grid cyber */
-  background-image:
-    repeating-linear-gradient(0deg, rgba(30,255,110,0.02) 0 2px, transparent 2px 40px),
-    repeating-linear-gradient(90deg, rgba(30,255,110,0.02) 0 2px, transparent 2px 40px);
-}
-
 @layer base {
   :root {
-    /* --- Cybersecurity Theme --- */
-    --background: 220 60% 8%;    /* Deep blue-black */
-    --foreground: 160 60% 90%;   /* Soft green-cyan */
-    --card: 220 40% 12% / 0.85;  /* Glassy navy */
-    --card-foreground: 160 60% 90%;
-    --popover: 220 40% 14% / 0.92;
-    --popover-foreground: 160 60% 90%;
+    /* MiniHack Analyzer Theme - Light Mode (Default) */
+    --background: 220 14% 96%; /* Very Light Gray */
+    --foreground: 225 64% 15%; /* Dark Blue */
 
-    --primary: 160 100% 45%;     /* Cyber Green */
-    --primary-foreground: 220 60% 8%; /* Deep bg */
-    --secondary: 210 40% 22%;    /* Dark blue */
-    --secondary-foreground: 160 60% 90%;
-    --muted: 220 20% 18%;        /* Muted navy */
-    --muted-foreground: 160 30% 60%;
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 225 64% 15%; /* Dark Blue */
 
-    --accent: 30 100% 55%;       /* Orange Alert */
-    --accent-foreground: 220 60% 8%;
-    --destructive: 0 85% 60%;    /* Alert Red */
-    --destructive-foreground: 0 0% 100%;
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 225 64% 15%; /* Dark Blue */
 
-    --border: 160 100% 30% / 0.3; /* Subtle green border */
-    --input: 220 20% 18%;
-    --ring: 160 100% 45%;        /* Cyber Green for focus */
+    --primary: 160 100% 32%; /* Teal */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    /* Chart Colors: Cybersecurity palette */
-    --chart-1: 160 100% 45%;     /* Green */
-    --chart-2: 200 100% 60%;     /* Blue */
-    --chart-3: 30 100% 55%;      /* Orange */
-    --chart-4: 0 85% 60%;        /* Red */
-    --chart-5: 280 100% 60%;     /* Purple */
+    --secondary: 220 14% 93%; /* Light Gray */
+    --secondary-foreground: 225 64% 15%; /* Dark Blue */
 
-    --radius: 1.25rem;
+    --muted: 220 14% 93%; /* Light Gray */
+    --muted-foreground: 220 10% 40%; /* Medium Gray */
 
-    /* Sidebar: Glassy, with neon accent border */
-    --sidebar-background: 220 40% 12% / 0.85;
-    --sidebar-foreground: 160 60% 90%;
-    --sidebar-primary: 160 100% 45%;
-    --sidebar-primary-foreground: 220 60% 8%;
-    --sidebar-accent: 30 100% 55%;
-    --sidebar-accent-foreground: 220 60% 8%;
-    --sidebar-border: 160 100% 45% / 0.4;
-    --sidebar-ring: 30 100% 55%;
+    --accent: 160 100% 40%; /* Lighter Teal */
+    --accent-foreground: 0 0% 100%; /* White */
+
+    --destructive: 0 84% 60%; /* Red */
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    --border: 220 14% 88%; /* Gray border */
+    --input: 220 14% 91%; /* Slightly darker input bg */
+    --ring: 160 100% 40%; /* Lighter Teal */
+
+    --radius: 0.75rem; /* Default rounded corners */
   }
 
   .dark {
-    /* --- Cybersecurity Dark Theme --- */
-    --background: 220 60% 6%;    /* Even darker */
-    --foreground: 160 80% 92%;   /* Brighter green */
-    --card: 220 40% 10% / 0.88;
-    --card-foreground: 160 80% 92%;
-    --popover: 220 40% 12% / 0.95;
-    --popover-foreground: 160 80% 92%;
+     /* MiniHack Analyzer Theme - Dark Mode */
+    --background: 225 64% 15%; /* Dark Blue */
+    --foreground: 210 40% 98%; /* Near White */
 
-    --primary: 160 100% 50%;     /* Neon Green */
-    --primary-foreground: 220 60% 6%;
-    --secondary: 210 40% 18%;
-    --secondary-foreground: 160 80% 92%;
-    --muted: 220 20% 12%;
-    --muted-foreground: 160 40% 60%;
+    --card: 225 64% 20%; /* Slightly lighter Dark Blue */
+    --card-foreground: 210 40% 98%; /* Near White */
 
-    --accent: 30 100% 60%;       /* Neon Orange */
-    --accent-foreground: 220 60% 6%;
-    --destructive: 0 90% 65%;    /* Neon Red */
-    --destructive-foreground: 0 0% 100%;
+    --popover: 225 64% 10%; /* Darker Dark Blue */
+    --popover-foreground: 210 40% 98%; /* Near White */
 
-    --border: 160 100% 40% / 0.4;
-    --input: 220 20% 12%;
-    --ring: 160 100% 50%;
+    --primary: 160 100% 32%; /* Teal */
+    --primary-foreground: 210 40% 98%; /* Near White */
 
-    --chart-1: 160 100% 50%;
-    --chart-2: 200 100% 65%;
-    --chart-3: 30 100% 60%;
-    --chart-4: 0 90% 65%;
-    --chart-5: 280 100% 65%;
+    --secondary: 220 10% 30%; /* Dark Gray */
+    --secondary-foreground: 210 40% 98%; /* Near White */
 
-    --sidebar-background: 220 40% 10% / 0.88;
-    --sidebar-foreground: 160 80% 92%;
-    --sidebar-primary: 160 100% 50%;
-    --sidebar-primary-foreground: 220 60% 6%;
-    --sidebar-accent: 30 100% 60%;
-    --sidebar-accent-foreground: 220 60% 6%;
-    --sidebar-border: 160 100% 50% / 0.5;
-    --sidebar-ring: 30 100% 60%;
+    --muted: 220 10% 25%; /* Darker Gray */
+    --muted-foreground: 220 15% 65%; /* Lighter Gray */
+
+    --accent: 160 100% 40%; /* Lighter Teal */
+    --accent-foreground: 225 64% 15%; /* Dark Blue */
+
+    --destructive: 0 72% 51%; /* Darker Red */
+    --destructive-foreground: 210 40% 98%; /* Near White */
+
+    --border: 220 10% 35%; /* Medium Gray */
+    --input: 220 10% 30%; /* Dark Gray */
+    --ring: 160 100% 40%; /* Lighter Teal */
   }
 }
 
@@ -107,125 +74,6 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    /* Glassmorphism + grid cyber effect */
-    background: linear-gradient(120deg, hsl(var(--background)) 0%, #172a46 100%);
-    background-image:
-      repeating-linear-gradient(0deg, rgba(30,255,110,0.03) 0 2px, transparent 2px 40px),
-      repeating-linear-gradient(90deg, rgba(30,255,110,0.03) 0 2px, transparent 2px 40px);
-    backdrop-filter: blur(2px);
-  }
-  .card {
-    background: hsla(var(--card));
-    box-shadow:
-      0 8px 32px 0 hsla(160, 100%, 45%, 0.10),
-      0 0 8px 2px hsla(160, 100%, 45%, 0.18) inset;
-    border-radius: var(--radius);
-    border: 1.5px solid hsla(var(--border));
-    backdrop-filter: blur(10px) saturate(1.2);
-    position: relative;
-    overflow: hidden;
-    transition: box-shadow 0.2s, border-color 0.2s;
-  }
-  .card::before {
-    /* Glow border effect */
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    pointer-events: none;
-    box-shadow: 0 0 24px 4px hsla(160, 100%, 45%, 0.15);
-    z-index: 1;
-  }
-  .card:hover {
-    box-shadow:
-      0 12px 40px 0 hsla(160, 100%, 45%, 0.25),
-      0 0 16px 4px hsla(30, 100%, 55%, 0.18) inset;
-    border-color: hsla(var(--primary), 0.8);
-  }
-  .sidebar {
-    background: hsla(var(--sidebar-background));
-    border-right: 2px solid hsla(var(--sidebar-border));
-    box-shadow: 0 0 24px 0 hsla(var(--primary), 0.10);
-    border-radius: 0 var(--radius) var(--radius) 0;
-    backdrop-filter: blur(14px) saturate(1.1);
-    position: relative;
-    overflow: hidden;
-  }
-  .sidebar::before {
-    /* Neon vertical glow bar */
-    content: "";
-    position: absolute;
-    left: 0; top: 0; bottom: 0; width: 6px;
-    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)));
-    filter: blur(2px);
-    opacity: 0.7;
-    z-index: 2;
-  }
-  .sidebar .active {
-    background: linear-gradient(90deg, hsla(var(--primary), 0.15), transparent);
-    border-left: 4px solid hsl(var(--sidebar-accent));
-    color: hsl(var(--sidebar-accent));
-    text-shadow: 0 0 8px hsl(var(--sidebar-accent)), 0 0 2px #fff;
-  }
-  .btn-primary {
-    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
-    color: hsl(var(--primary-foreground));
-    border-radius: calc(var(--radius) / 1.5);
-    box-shadow: 0 2px 12px 0 hsla(var(--primary), 0.18), 0 0 8px 2px hsla(var(--primary), 0.25) inset;
-    text-shadow: 0 0 4px hsl(var(--primary)), 0 0 2px #fff;
-    transition: box-shadow 0.2s, transform 0.1s, filter 0.2s;
-    filter: brightness(1.1) saturate(1.2);
-    border: none;
-  }
-  .btn-primary:hover {
-    box-shadow: 0 4px 24px 0 hsla(var(--primary), 0.32), 0 0 16px 4px hsla(var(--accent), 0.22) inset;
-    transform: translateY(-2px) scale(1.04);
-    filter: brightness(1.2) saturate(1.4);
-  }
-  .btn-danger {
-    background: linear-gradient(90deg, hsl(var(--destructive)), hsl(var(--accent)));
-    color: hsl(var(--destructive-foreground));
-    border-radius: calc(var(--radius) / 1.5);
-    box-shadow: 0 2px 12px 0 hsla(var(--destructive), 0.18), 0 0 8px 2px hsla(var(--destructive), 0.25) inset;
-    text-shadow: 0 0 4px hsl(var(--destructive)), 0 0 2px #fff;
-    transition: box-shadow 0.2s, transform 0.1s, filter 0.2s;
-    filter: brightness(1.1) saturate(1.2);
-    border: none;
-  }
-  .btn-danger:hover {
-    box-shadow: 0 4px 24px 0 hsla(var(--destructive), 0.32), 0 0 16px 4px hsla(var(--accent), 0.22) inset;
-    transform: translateY(-2px) scale(1.04);
-    filter: brightness(1.2) saturate(1.4);
-  }
-  input, textarea, select {
-    background: hsla(var(--input), 0.8);
-    color: hsl(var(--foreground));
-    border-radius: calc(var(--radius) / 2.5);
-    border: 1.5px solid hsla(var(--border));
-    box-shadow: 0 1px 4px 0 hsla(var(--primary), 0.07);
-    transition: border-color 0.2s, box-shadow 0.2s;
-    outline: none;
-  }
-  input:focus, textarea:focus, select:focus {
-    border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 2px hsl(var(--ring)), 0 1px 8px 0 hsla(var(--primary), 0.13);
-  }
-  /* Cyber flicker animation for accent text */
-  .cyber-flicker {
-    color: hsl(var(--primary));
-    text-shadow: 0 0 8px hsl(var(--primary)), 0 0 2px #fff;
-    animation: cyberFlicker 2.2s infinite alternate;
-  }
-  @keyframes cyberFlicker {
-    0%, 100% { opacity: 1; filter: brightness(1.2); }
-    10% { opacity: 0.7; filter: brightness(1.5); }
-    20% { opacity: 0.9; filter: brightness(1.1); }
-    30% { opacity: 0.6; filter: brightness(1.7); }
-    40% { opacity: 1; filter: brightness(1.3); }
-    50% { opacity: 0.8; filter: brightness(1.6); }
-    60% { opacity: 1; filter: brightness(1.2); }
-    70% { opacity: 0.7; filter: brightness(1.4); }
-    80% { opacity: 1; filter: brightness(1.2); }
-    90% { opacity: 0.9; filter: brightness(1.3); }
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }

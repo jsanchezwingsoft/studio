@@ -5,9 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import Link from 'next/link';
-import { Mail, Send, ArrowLeft } from 'lucide-react';
+import { Mail, Send, ArrowLeft } from 'lucide-react'; // Keep icons
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; // Use standard Button
 import {
   Card,
   CardContent,
@@ -51,29 +51,22 @@ export function ForgotPasswordForm() {
     // Simulate API call for password reset request
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    // Replace with actual password reset logic
-    // On successful request:
     toast({
       title: "Password Reset Email Sent",
       description: `If an account exists for ${values.email}, you will receive password reset instructions.`,
-      variant: 'default', // Use default for success
+      variant: 'default', // Use default variant
     });
-    setIsSubmitted(true); // Show confirmation message/state
-
-    // Example error handling (e.g., server error)
-    // toast({
-    //   variant: "destructive",
-    //   title: "Request Failed",
-    //   description: "Could not process your request. Please try again later.",
-    // });
+    setIsSubmitted(true);
 
     setIsLoading(false);
   }
 
   return (
-    <Card className="w-full max-w-md card"> {/* Added 'card' class */}
+    // Use standard Card component
+    <Card className="w-full max-w-md">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold text-primary cyber-flicker"> {/* Applied cyber-flicker */}
+        {/* Title uses primary color */}
+        <CardTitle className="text-2xl font-bold text-primary">
           Forgot Your Password?
         </CardTitle>
         <CardDescription>
@@ -91,14 +84,14 @@ export function ForgotPasswordForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground/80">Email</FormLabel> {/* Adjusted label color */}
+                    <FormLabel>Email</FormLabel>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="user@domain.com" // Updated placeholder
-                          className="pl-10" // Added input class
+                          placeholder="user@domain.com"
+                          className="pl-10" // Keep padding for icon
                           {...field}
                           aria-label="Email"
                         />
@@ -108,7 +101,8 @@ export function ForgotPasswordForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full btn-primary" disabled={isLoading}> {/* Updated class */}
+              {/* Use standard Button */}
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -129,7 +123,8 @@ export function ForgotPasswordForm() {
         )}
       </CardContent>
       <CardFooter className="flex justify-center">
-        <Link href="/login" className="text-sm text-primary hover:text-primary/80 hover:underline flex items-center gap-1 transition-colors"> {/* Added transition */}
+        {/* Link uses primary color */}
+        <Link href="/login" className="text-sm text-primary hover:text-primary/80 hover:underline flex items-center gap-1 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back to Login
         </Link>
       </CardFooter>

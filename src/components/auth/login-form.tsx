@@ -5,9 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import Link from 'next/link';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn } from 'lucide-react'; // Keep icons
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; // Use standard Button
 import {
   Card,
   CardContent,
@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }), // Increased min length
+  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -53,19 +53,11 @@ export function LoginForm() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // Replace with actual authentication logic
-    // For demonstration, always show success
     toast({
       title: "Login Successful",
       description: "Access Granted. Redirecting...",
-      variant: 'default', // Use default for success
+      variant: 'default', // Use default variant (can be themed)
     });
-
-    // Example error handling:
-    // toast({
-    //   variant: "destructive",
-    //   title: "Login Failed",
-    //   description: "Authentication Error: Invalid Credentials.",
-    // });
 
     setIsLoading(false);
     // TODO: Redirect to the dashboard or appropriate page on successful login
@@ -73,9 +65,11 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md card"> {/* Added 'card' class */}
+    // Use standard Card component, styling comes from globals.css theme
+    <Card className="w-full max-w-md">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold text-primary cyber-flicker"> {/* Applied cyber-flicker */}
+        {/* Title uses primary color from theme */}
+        <CardTitle className="text-2xl font-bold text-primary">
           MiniHack Analyzer Login
         </CardTitle>
         <CardDescription>
@@ -90,14 +84,14 @@ export function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground/80">Email</FormLabel> {/* Adjusted label color */}
+                  <FormLabel>Email</FormLabel>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="user@domain.com" // Updated placeholder
-                        className="pl-10" // Added input class
+                        placeholder="user@domain.com"
+                        className="pl-10" // Keep padding for icon
                         {...field}
                         aria-label="Email"
                       />
@@ -112,14 +106,14 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground/80">Password</FormLabel> {/* Adjusted label color */}
+                  <FormLabel>Password</FormLabel>
                    <div className="relative">
                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="••••••••••••" // Updated placeholder
-                        className="pl-10" // Added input class
+                        placeholder="••••••••••••"
+                        className="pl-10" // Keep padding for icon
                         {...field}
                         aria-label="Password"
                        />
@@ -129,7 +123,8 @@ export function LoginForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full btn-primary" disabled={isLoading}> {/* Updated class */}
+            {/* Use standard Button, variant="default" will use primary colors */}
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -144,7 +139,8 @@ export function LoginForm() {
         </Form>
       </CardContent>
        <CardFooter className="flex justify-center">
-         <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 hover:underline transition-colors"> {/* Added transition */}
+         {/* Link uses primary color from theme */}
+         <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 hover:underline transition-colors">
             Forgot Password?
           </Link>
       </CardFooter>
