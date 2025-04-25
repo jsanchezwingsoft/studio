@@ -61,7 +61,7 @@ export function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
     console.log('Login attempt with:', values);
-    const loginEndpoint = "https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/login";
+    const loginEndpoint = 'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/login';
     console.log(`Attempting to POST to: ${loginEndpoint}`);
     try {
       const response = await fetch(loginEndpoint, {
@@ -108,6 +108,7 @@ export function LoginForm() {
       });
       sessionStorage.setItem('accessToken', data.access_token);
       sessionStorage.setItem('refreshToken', data.refresh_token);
+      sessionStorage.setItem('username', data.user.username);
       router.push('/');
     } catch (error) {
       console.error('Caught error during login fetch:', error);

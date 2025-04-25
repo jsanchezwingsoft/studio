@@ -25,16 +25,14 @@ export const fetchWrapper = async (
     let accessToken = sessionStorage.getItem('accessToken');
     let refreshToken = sessionStorage.getItem('refreshToken');
 
-    // Si el access token está expirado o por expirar, intenta refrescarlo
     if (!isAuthenticated(accessToken)) {
         if (!refreshToken) {
             sessionStorage.removeItem('accessToken');
             sessionStorage.removeItem('refreshToken');
-            // Devuelve un valor especial para que el componente maneje la redirección
             return { error: 'not_authenticated' };
         }
         try {
-            const refreshResponse = await fetch('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/refresh', {
+            const refreshResponse = await fetch('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/refresh', { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -62,5 +60,11 @@ export const fetchWrapper = async (
     }
     (options.headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
 
-    return await fetch(url, options);
+    const response = await fetch(url, options);
+
+    if (response.status === 404) {
+        return { error: 'not_found', status: 404, message: `Endpoint not found: ${url}` };
+    }
+
+    return response;
 };
