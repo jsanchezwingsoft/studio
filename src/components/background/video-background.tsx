@@ -3,7 +3,7 @@
 import React from 'react';
 
 // Placeholder video URL - replace with your actual video file or URL
-const videoUrl = "https://videos.pexels.com/video-files/854006/854006-hd_1920_1080_25fps.mp4"; // Example URL
+const videoUrl = "https://consoledevops3.wingsoftlab.com/api/v1/buckets/minihackanalyzer/objects/download?preview=true&prefix=f74977ad8e30745fadd8b6e7de3ea1a7eba8be14.mp4&version_id=null"; // Example URL
 
 export const VideoBackground = () => {
   return (

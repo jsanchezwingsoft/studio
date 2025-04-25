@@ -1,11 +1,15 @@
+'use client';
+import React from 'react';
 import { LoginForm } from '@/components/auth/login-form';
+import { VideoBackground } from '@/components/background/video-background';
 
 export default function LoginPage() {
   return (
-    // Use flex-grow to ensure this container fills the space provided by the layout
-    // Use min-h-screen and flex to center the form vertically
-    <div className="flex flex-grow flex-col items-center justify-center min-h-screen p-4">
-      <LoginForm />
-    </div>
+    <main className='relative h-screen w-screen overflow-hidden'>
+        <VideoBackground/>
+        <div className="relative flex items-center justify-center h-screen ">
+            <LoginForm />
+        </div>
+    </main>
   );
 }

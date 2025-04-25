@@ -1,4 +1,3 @@
-
 "use client";
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,18 +24,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-// Import useRouter for potential redirection after login
 import { useRouter } from 'next/navigation';
 
 const loginFormSchema = z.object({
-  // API likely expects 'username' or 'email'. Assuming email for now.
-  // If it expects username, change this field name and placeholder.
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
 });
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-// Define expected API response structure
 interface LoginResponse {
   access_token: string;
   refresh_token: string;
@@ -47,17 +42,13 @@ interface LoginResponse {
     role: string;
   };
 }
-
-// Define potential API error structure
 interface ApiError {
-  detail?: string | { msg: string; type: string }[]; // API might return string or structured error
-  // Add other potential error fields if known
+  detail?: string | { msg: string; type: string }[];
 }
-
 
 export function LoginForm() {
   const { toast } = useToast();
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -69,91 +60,63 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
-    console.log('Login attempt with:', values); // Keep for debugging form values
-
+    console.log('Login attempt with:', values);
     const loginEndpoint = "https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/login";
-    console.log(`Attempting to POST to: ${loginEndpoint}`); // Log the endpoint
-
+    console.log(`Attempting to POST to: ${loginEndpoint}`);
     try {
       const response = await fetch(loginEndpoint, {
         method: 'POST',
         headers: {
-          // Ensure correct headers for the API
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json', // CORREGIDO: JSON
           'accept': 'application/json',
-          // Note: No 'Access-Control-Allow-Origin' header needed here (browser adds Origin)
-          // The *server* needs to respond with 'Access-Control-Allow-Origin: *' or your specific frontend origin
         },
-        // Encode form data for x-www-form-urlencoded
-        body: new URLSearchParams({
-          username: values.email, // Sending email as username based on API expectation
-          password: values.password,
+        body: JSON.stringify({
+          email: values.email,      // CORREGIDO: email
+          password: values.password // CORREGIDO: password
         }),
-        // Consider adding mode: 'cors' if explicitly needed, though it's the default
-        // mode: 'cors',
+      // Sending the email and password to the API
       });
-
-      console.log('Fetch response status:', response.status); // Log response status
-
+      console.log('Fetch response status:', response.status);
       if (!response.ok) {
         let errorMessage = `Login failed: ${response.statusText} (Status: ${response.status})`;
         let errorData: ApiError | null = null;
         try {
           errorData = await response.json();
-          // Handle both string and structured error details
           if (typeof errorData?.detail === 'string') {
             errorMessage = errorData.detail;
           } else if (Array.isArray(errorData?.detail) && errorData.detail[0]?.msg) {
              errorMessage = errorData.detail[0].msg;
           }
-          console.error('API Error Response Body:', errorData); // Log parsed error
+          console.error('API Error Response Body:', errorData);
         } catch (e) {
-          // If parsing error JSON fails, stick with the status text
           console.error("Failed to parse error response JSON:", e);
-          const textResponse = await response.text(); // Attempt to get raw text response
+          const textResponse = await response.text();
           console.error('API Error Response Text:', textResponse);
         }
-         // Add specific check for common CORS/Network issues indicated by status 0
-         if (response.status === 0) {
-             errorMessage = 'Network error or CORS issue. Check browser console & server CORS configuration.';
-         }
+        if (response.status === 0) {
+            errorMessage = 'Network error or CORS issue. Check browser console & server CORS configuration.';
+        }
         throw new Error(errorMessage);
       }
-
       // Login successful
       const data: LoginResponse = await response.json();
-      console.log('Login successful, API Response:', data); // Log the success response data
-
-      // --- Token and User Data Handling ---
-      // In a real app, store tokens securely (e.g., httpOnly cookies handled by the server,
-      // or secure state management). Avoid localStorage for sensitive tokens.
-      // For now, we'll just show success and potentially redirect.
-      // Example: sessionStorage.setItem('accessToken', data.access_token);
-
+      console.log('Login successful, API Response:', data);
       toast({
         title: "Login Successful",
-        description: `Welcome, ${data.user.username}! Access Granted.`, // Use username from response
-        variant: 'default', // Use 'default' or a custom 'success' variant if defined
+        description: `Welcome, ${data.user.username}! Access Granted.`,
+        variant: 'default',
       });
-
-      // Optional: Redirect to a dashboard or protected page after a short delay
-      // setTimeout(() => router.push('/dashboard'), 1000); // Example redirect
-
+      sessionStorage.setItem('accessToken', data.access_token);
+      router.push('/');
     } catch (error) {
-      // Log the raw error object for detailed inspection
       console.error('Caught error during login fetch:', error);
-
       let toastMessage = "An unexpected error occurred. Please try again.";
-
-       // Specifically handle the 'Failed to fetch' TypeError
-       if (error instanceof TypeError && error.message === 'Failed to fetch') {
-           toastMessage = 'Network error: Could not connect to the server. This might be due to a network issue, the server being down, or a CORS policy blocking the request. Please check your network connection and the browser console (Network tab) for more details (e.g., CORS errors). The backend server MUST be configured to allow requests from this frontend origin.';
-           console.error("Detailed 'Failed to fetch' error likely indicates Network or CORS issue. Check the browser's Network tab.");
-       } else if (error instanceof Error) {
-           // Use the message from other Error types
-           toastMessage = error.message;
-       }
-
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+          toastMessage = 'Network error: Could not connect to the server. This might be due to a network issue, the server being down, or a CORS policy blocking the request. Please check your network connection and the browser console (Network tab) for more details (e.g., CORS errors). The backend server MUST be configured to allow requests from this frontend origin.';
+          console.error("Detailed 'Failed to fetch' error likely indicates Network or CORS issue. Check the browser's Network tab.");
+      } else if (error instanceof Error) {
+          toastMessage = error.message;
+      }
       toast({
         title: "Login Failed",
         description: toastMessage,
@@ -163,6 +126,7 @@ export function LoginForm() {
       setIsLoading(false);
     }
   }
+
   return (
     <Card className="w-full max-w-md card animate-fade-in">
       <CardHeader className="space-y-1 text-center">
@@ -178,15 +142,15 @@ export function LoginForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="email" // Ensure this matches the schema and expected API field (or adjust body mapping)
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email / Username</FormLabel> {/* Adjust label if needed */}
+                  <FormLabel>Email / Username</FormLabel>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
                     <FormControl>
                       <Input
-                        type="email" // Keep as email type for validation, API mapping handles sending as 'username'
+                        type="email"
                         placeholder="user@domain.com"
                         className="pl-10"
                         {...field}
