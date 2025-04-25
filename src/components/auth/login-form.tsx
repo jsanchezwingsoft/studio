@@ -50,7 +50,7 @@ interface LoginResponse {
 
 // Define potential API error structure
 interface ApiError {
-  detail?: string;
+  detail?: string | { msg: string; type: string }[]; // API might return string or structured error
   // Add other potential error fields if known
 }
 
@@ -77,25 +77,39 @@ export function LoginForm() {
       const response = await fetch(loginEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded', // API expects form data
-          'accept': 'application/json'
+          // Ensure correct headers for the API
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'accept': 'application/json',
+          // Note: No 'Access-Control-Allow-Origin' header needed here (browser adds Origin)
+          // The *server* needs to respond with 'Access-Control-Allow-Origin: *' or your specific frontend origin
         },
         // Encode form data for x-www-form-urlencoded
         body: new URLSearchParams({
-          username: values.email, // Sending email as username based on standard practice, adjust if needed
+          username: values.email, // Sending email as username based on API expectation
           password: values.password,
-        })
+        }),
+        // Consider adding mode: 'cors' if explicitly needed, though it's the default
+        // mode: 'cors',
       });
 
       if (!response.ok) {
         let errorMessage = `Login failed: ${response.statusText} (Status: ${response.status})`;
         try {
-            const errorData: ApiError = await response.json();
-            errorMessage = errorData.detail || errorMessage; // Use detailed error message if available
+          const errorData: ApiError = await response.json();
+          // Handle both string and structured error details
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail) && errorData.detail[0]?.msg) {
+             errorMessage = errorData.detail[0].msg;
+          }
         } catch (e) {
-            // If parsing error JSON fails, stick with the status text
-            console.error("Failed to parse error response:", e);
+          // If parsing error JSON fails, stick with the status text
+          console.error("Failed to parse error response:", e);
         }
+         // Add specific check for common CORS/Network issues indicated by status 0
+         if (response.status === 0) {
+             errorMessage = 'Network error or CORS issue. Check browser console & server CORS configuration.';
+         }
         throw new Error(errorMessage);
       }
 
@@ -119,10 +133,18 @@ export function LoginForm() {
       // setTimeout(() => router.push('/dashboard'), 1000); // Example redirect
 
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error details:', error);
+      // Provide a more informative message for TypeError: Failed to fetch
+      let toastMessage = "An unexpected error occurred. Please try again.";
+       if (error instanceof TypeError && error.message === 'Failed to fetch') {
+           toastMessage = 'Network error: Could not connect to the server. Please check your connection or if the server is running. CORS policy might also be blocking the request (check browser console).';
+       } else if (error instanceof Error) {
+           toastMessage = error.message;
+       }
+
       toast({
         title: "Login Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
+        description: toastMessage,
         variant: "destructive",
       });
     } finally {
