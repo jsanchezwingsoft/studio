@@ -28,6 +28,7 @@ const HomePage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const usersPerPage = 8;
     const [searchTerm, setSearchTerm] = useState('');
+    const [confirmRemove, setConfirmRemove] = useState<{user_id: string, role_name: string} | null>(null);
     const { toast } = useToast();
     const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
     const router = useRouter();
@@ -177,9 +178,14 @@ const HomePage = () => {
         }
     };
 
-    // Desasignar rol
+    // Desasignar rol con confirmación
     const handleRemoveRole = async (user_id: string, role_name: string) => {
-        // Busca el role_id por role_name
+        setConfirmRemove({ user_id, role_name });
+    };
+
+    const confirmRemoveRole = async () => {
+        if (!confirmRemove) return;
+        const { user_id, role_name } = confirmRemove;
         const role = roles.find(r => r.role_name === role_name);
         if (!role) return;
         try {
@@ -212,6 +218,7 @@ const HomePage = () => {
                 description: "Error inesperado.",
             });
         }
+        setConfirmRemove(null);
     };
 
     const handleCreateUser = async () => {
@@ -442,7 +449,7 @@ const HomePage = () => {
                                                                                           type="button"
                                                                                           className="ml-1 text-white hover:text-red-400"
                                                                                           title={`Desasignar rol ${role}`}
-                                                                                          onClick={() => handleRemoveRole(user.user_id, role)}
+                                                                                          onClick={() => setConfirmRemove({ user_id: user.user_id, role_name: role })}
                                                                                       >
                                                                                           <XCircle className="h-3 w-3" />
                                                                                       </button>
@@ -476,7 +483,7 @@ const HomePage = () => {
                                               </div>
                                               <DialogFooter className='justify-between mt-4'>
                                                   <Button type="submit" className="bg-[#017979] hover:bg-[#015e5e] text-white" onClick={handleAssignRole}>
-                                                      <span className="text-black">Asignar Rol</span>
+                                                      Asignar Rol
                                                   </Button>
                                                   <Button type="button" variant="secondary" onClick={() => {
                                                       setIsRolesModalOpen(false);
@@ -486,6 +493,22 @@ const HomePage = () => {
                                                       Cancelar
                                                   </Button>
                                               </DialogFooter>
+                                              {/* Confirmación para desasignar */}
+                                              {confirmRemove && (
+                                                  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+                                                      <div className="bg-white p-6 rounded shadow-lg flex flex-col items-center">
+                                                          <p className="mb-4 text-black">¿Estás seguro que deseas desasignar el rol <b>{confirmRemove.role_name}</b>?</p>
+                                                          <div className="flex gap-4">
+                                                              <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmRemoveRole}>
+                                                                  Sí, desasignar
+                                                              </Button>
+                                                              <Button variant="secondary" onClick={() => setConfirmRemove(null)}>
+                                                                  Cancelar
+                                                              </Button>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              )}
                                         </DialogContent>
                                     </Dialog>
                                 </div>
