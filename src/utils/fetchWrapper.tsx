@@ -60,11 +60,21 @@ export const fetchWrapper = async (
     }
     (options.headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
 
+    // CORRECCIÓN: Serializa el body si es un objeto (no string)
+    if (options.body && typeof options.body !== 'string') {
+        options.body = JSON.stringify(options.body);
+        // Asegura que el header Content-Type esté presente
+        (options.headers as Record<string, string>)['Content-Type'] = 'application/json';
+    }
+
+    // Logs para depuración
+    // console.log('fetchWrapper headers:', options.headers);
+    // console.log('fetchWrapper body:', options.body);
+
     const response = await fetch(url, options);
 
     if (response.status === 404) {
         return { error: 'not_found', status: 404, message: `Endpoint not found: ${url}` };
     }
-
     return response;
 };

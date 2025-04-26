@@ -4,13 +4,23 @@ import { useRouter } from 'next/navigation';
 import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Button } from '@/components/ui/button';
 import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { VideoBackground } from '@/components/background/video-background';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-export default function HomePage() {
+const HomePage = () => {
     const [isAuthenticatedState, setIsAuthenticatedState] = useState<boolean>(false);
     const [email, setEmail] = useState<string>('');
     const [userRoles, setUserRoles] = useState<string[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newUsername, setNewUsername] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [newPhone, setNewPhone] = useState('');
+    const { toast } = useToast();
     const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
     const router = useRouter();
     const isAuthenticated = isAuthenticatedState;
@@ -48,7 +58,6 @@ export default function HomePage() {
     };
 
     useEffect(() => {
-        // Solo validación local del token y email/roles
         const token = sessionStorage.getItem('accessToken');
         const storedEmail = sessionStorage.getItem('email');
         const storedRoles = sessionStorage.getItem('roles');
@@ -69,11 +78,82 @@ export default function HomePage() {
         }
     }, [router]);
 
+    const canCreateUsers = userRoles.includes('superadmin') || userRoles.includes('contributor');
+    useEffect(() => {
+        if (!canCreateUsers) {
+            setAreAdminButtonsVisible(false);
+        }
+    }, [canCreateUsers]);
+
+    const handleCreateUser = async () => {
+        setIsModalOpen(false);
+        try {
+            const user = {
+                username: newUsername,
+                email: newEmail,
+                password: newPassword,
+                phone: newPhone,
+            };
+            if (!canCreateUsers) {
+                toast({
+                    variant: "destructive",
+                    title: "Sin permisos",
+                    description: "No tienes permisos para crear usuarios.",
+                });
+                return;
+            }
+            const response = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/',
+                {
+                    method: 'POST',
+                    // PASA EL OBJETO, NO JSON.stringify
+                    body: user,
+                }
+            );
+            if (response.status >= 200 && response.status < 300) {
+                const data = await response.json();
+                toast({
+                    variant: "success",
+                    title: "Usuario creado con éxito",
+                    description: (
+                        <Alert className='flex gap-2'>
+                            <div className='flex flex-col'>
+                                <AlertTitle>Usuario</AlertTitle>
+                                <AlertDescription>{data.username}</AlertDescription>
+                            </div>
+                            <div className='flex flex-col'>
+                                <AlertTitle>Email</AlertTitle>
+                                <AlertDescription>{data.email}</AlertDescription>
+                            </div>
+                        </Alert>
+                    ),
+                });
+                // Limpia los campos del modal
+                setNewUsername('');
+                setNewEmail('');
+                setNewPassword('');
+                setNewPhone('');
+            } else {
+                const errorData = await response.json()
+                toast({
+                    variant: "destructive",
+                    title: "Error al crear el usuario",
+                    description: errorData.message || "Error inesperado.",
+                });
+            }
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error al crear el usuario",
+                description: "Error inesperado.",
+            });
+            console.error("Error inesperado:", error)
+        }
+    };
+
     if (!isAuthenticated) {
         return <div className="flex items-center justify-center min-h-screen"><p className="text-foreground z-10">Loading...</p></div>;
     }
 
-    // CSS para el efecto heartbeat (puedes moverlo a tu CSS global)
     const heartbeatStyle = `
     @keyframes heartbeat {
       0%, 100% {
@@ -119,7 +199,7 @@ export default function HomePage() {
                                 {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Dashboard</span>}
                             </Button>
                             {canSeeAdminButtons && (
-                                <Button
+                                <Button 
                                     variant="ghost"
                                     className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`}
                                     title="Administrator User"
@@ -129,12 +209,46 @@ export default function HomePage() {
                                     {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Administrator User</span>}                                  
                                 </Button>
                             )}
-                            {areAdminButtonsVisible && canSeeAdminButtons && (
+                            {areAdminButtonsVisible && canSeeAdminButtons &&  (
                                 <div className="flex flex-col items-center w-full">
-                                    <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Create User">
-                                        <UserPlus className="h-5 w-5 flex-shrink-0 text-white"/>
-                                        {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Create User</span>}
-                                    </Button>
+                                   <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                                        <DialogTrigger asChild>
+                                                <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Create User">
+                                                    <UserPlus className="h-5 w-5 flex-shrink-0 text-white"/>
+                                                    {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Create User</span>}
+                                                </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                            <DialogHeader>
+                                            <DialogTitle>Crear nuevo usuario</DialogTitle>
+                                            <DialogDescription>
+                                               Introduce los datos del nuevo usuario:
+                                            </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <div className="grid grid-cols-4 items-center gap-4">
+                                                    <Input id="name" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="col-span-4" type="text" placeholder="Username" />
+                                                    <Input id="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="col-span-4" type="email" placeholder="Email" />
+                                                    <Input id="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="col-span-4" type="password" placeholder="Password" />
+                                                    <Input id="phone" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="col-span-4" type="text" placeholder="Phone" />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button type="submit" onClick={handleCreateUser}>
+                                                   Crear
+                                                </Button>
+                                                <Button type="button" variant="secondary" onClick={() => {
+                                                    setIsModalOpen(false);
+                                                    setNewUsername('');
+                                                    setNewEmail('');
+                                                    setNewPassword('');
+                                                    setNewPhone('');
+                                                }}>
+                                                    Cancelar
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
                                     <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Roles">
                                         <Users className="h-5 w-5 flex-shrink-0 text-white"/>
                                         {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Roles</span>}
@@ -149,7 +263,7 @@ export default function HomePage() {
                             <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Button 2">
                                 <Mail className="h-5 w-5 flex-shrink-0 text-white"/>
                                 {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Button 2</span>}
-                            </Button>
+                            </Button> 
                         </nav>
                     </div>
                     <div className='w-full flex justify-center mt-auto'>
@@ -171,4 +285,5 @@ export default function HomePage() {
             </div>
         </div>
     );
-}
+};
+export default HomePage;
