@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Button } from '@/components/ui/button';
-import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus, XCircle } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { VideoBackground } from '@/components/background/video-background';
@@ -16,10 +16,18 @@ const HomePage = () => {
     const [userRoles, setUserRoles] = useState<string[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
     const [newUsername, setNewUsername] = useState('');
     const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [newPhone, setNewPhone] = useState('');
+    const [users, setUsers] = useState<{ user_id: string, username: string, roles: string[] }[]>([]);
+    const [roles, setRoles] = useState<{role_id: string, role_name: string}[]>([]);
+    const [selectedUserId, setSelectedUserId] = useState('');
+    const [selectedRoleId, setSelectedRoleId] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const usersPerPage = 8;
+    const [searchTerm, setSearchTerm] = useState('');
     const { toast } = useToast();
     const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
     const router = useRouter();
@@ -85,6 +93,127 @@ const HomePage = () => {
         }
     }, [canCreateUsers]);
 
+    // Obtener usuarios y roles para el modal de asignación de roles
+    const fetchUsersAndRoles = async () => {
+        try {
+            const usersResponse = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/list-with-roles', { method: 'GET' });
+            if (usersResponse.ok) {
+                const usersData = await usersResponse.json();
+                setUsers(usersData);
+            }
+            const rolesResponse = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/roles/list', { method: 'GET' });
+            if (rolesResponse.ok) {
+                const rolesData = await rolesResponse.json();
+                setRoles(rolesData);
+            }
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error al obtener usuarios o roles",
+                description: "No se pudo cargar la información necesaria.",
+            });
+        }
+    };
+
+    // Abre el modal de roles y carga usuarios/roles
+    const openRolesModal = () => {
+        setIsRolesModalOpen(true);
+        fetchUsersAndRoles();
+    };
+
+    const handleAssignRole = async () => {
+        if (!selectedUserId || !selectedRoleId) {
+            toast({
+                variant: "destructive",
+                title: "Campos requeridos",
+                description: "Debes seleccionar un usuario y un rol.",
+            });
+            return;
+        }
+        try {
+            const response = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/roles/assign', {
+                method: 'POST',
+                body: {
+                    user_id: selectedUserId,
+                    role_id: selectedRoleId,
+                },
+            });
+            if (response.status >= 200 && response.status < 300) {
+                const data = await response.json();
+                toast({
+                    variant: "success",
+                    title: "Rol asignado con éxito",
+                    description: (
+                        <Alert className='flex gap-2'>
+                            <div className='flex flex-col'>
+                                <AlertTitle>Usuario</AlertTitle>
+                                <AlertDescription>{data.user_id}</AlertDescription>
+                            </div>
+                            <div className='flex flex-col'>
+                                <AlertTitle>Rol</AlertTitle>
+                                <AlertDescription>{data.role_id}</AlertDescription>
+                            </div>
+                        </Alert>
+                    ),
+                });
+                setIsRolesModalOpen(false);
+                setSelectedUserId('');
+                setSelectedRoleId('');
+                fetchUsersAndRoles(); // Refresca la tabla
+            } else {
+                const errorData = await response.json();
+                toast({
+                    variant: "destructive",
+                    title: "Error al asignar rol",
+                    description: errorData.detail || "Error inesperado.",
+                });
+            }
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error al asignar rol",
+                description: "Error inesperado.",
+            });
+        }
+    };
+
+    // Desasignar rol
+    const handleRemoveRole = async (user_id: string, role_name: string) => {
+        // Busca el role_id por role_name
+        const role = roles.find(r => r.role_name === role_name);
+        if (!role) return;
+        try {
+            const response = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/roles/remove', {
+                method: 'DELETE',
+                body: {
+                    user_id,
+                    role_id: role.role_id,
+                },
+            });
+            if (response.status >= 200 && response.status < 300) {
+                toast({
+                    variant: "success",
+                    title: "Rol desasignado con éxito",
+                    description: `Rol ${role_name} desasignado del usuario.`,
+                });
+                fetchUsersAndRoles(); // Refresca la tabla
+            } else {
+                const errorData = await response.json();
+                toast({
+                    variant: "destructive",
+                    title: "Error al desasignar rol",
+                    description: errorData.detail || "Error inesperado.",
+                });
+            }
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error al desasignar rol",
+                description: "Error inesperado.",
+            });
+        }
+    };
+
     const handleCreateUser = async () => {
         setIsModalOpen(false);
         try {
@@ -105,7 +234,6 @@ const HomePage = () => {
             const response = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/',
                 {
                     method: 'POST',
-                    // PASA EL OBJETO, NO JSON.stringify
                     body: user,
                 }
             );
@@ -127,7 +255,6 @@ const HomePage = () => {
                         </Alert>
                     ),
                 });
-                // Limpia los campos del modal
                 setNewUsername('');
                 setNewEmail('');
                 setNewPassword('');
@@ -149,6 +276,12 @@ const HomePage = () => {
             console.error("Error inesperado:", error)
         }
     };
+
+    // Filtro de usuarios por búsqueda
+    const filteredUsers = users.filter(user =>
+        user.username.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const paginatedFilteredUsers = filteredUsers.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage);
 
     if (!isAuthenticated) {
         return <div className="flex items-center justify-center min-h-screen"><p className="text-foreground z-10">Loading...</p></div>;
@@ -199,7 +332,7 @@ const HomePage = () => {
                                 {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Dashboard</span>}
                             </Button>
                             {canSeeAdminButtons && (
-                                <Button 
+                                <Button
                                     variant="ghost"
                                     className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`}
                                     title="Administrator User"
@@ -209,8 +342,8 @@ const HomePage = () => {
                                     {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Administrator User</span>}                                  
                                 </Button>
                             )}
-                            {areAdminButtonsVisible && canSeeAdminButtons &&  (
-                                <div className="flex flex-col items-center w-full">
+                            {areAdminButtonsVisible && canSeeAdminButtons && (
+                              <div className="flex flex-col items-center w-full">
                                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                                         <DialogTrigger asChild>
                                                 <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Create User">
@@ -233,7 +366,7 @@ const HomePage = () => {
                                                     <Input id="phone" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="col-span-4" type="text" placeholder="Phone" />
                                                 </div>
                                             </div>
-                                            <DialogFooter>
+                                            <DialogFooter className='justify-between'>
                                                 <Button type="submit" onClick={handleCreateUser}>
                                                    Crear
                                                 </Button>
@@ -249,10 +382,112 @@ const HomePage = () => {
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
-                                    <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Roles">
-                                        <Users className="h-5 w-5 flex-shrink-0 text-white"/>
-                                        {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Roles</span>}
-                                    </Button>
+                                    {/* MODAL PARA ASIGNAR ROLES */}
+                                    <Dialog open={isRolesModalOpen} onOpenChange={setIsRolesModalOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Roles" onClick={openRolesModal}>
+                                                <Users className="h-5 w-5 flex-shrink-0 text-white"/>
+                                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Roles</span>}
+                                            </Button>
+                                        </DialogTrigger>                                        
+                                        <DialogContent className="sm:max-w-[900px]">
+                                              <DialogHeader>
+                                                  <DialogTitle>Asignar/Desasignar Rol a Usuario</DialogTitle>
+                                                  <DialogDescription>
+                                                      Busca, selecciona y asigna o desasigna un rol a un usuario.
+                                                  </DialogDescription>
+                                              </DialogHeader>
+                                              <div className="mb-2">
+                                                  <Input
+                                                      type="text"
+                                                      placeholder="Buscar usuario por nombre..."
+                                                      value={searchTerm}
+                                                      onChange={e => {
+                                                          setSearchTerm(e.target.value);
+                                                          setCurrentPage(1);
+                                                      }}
+                                                      className="w-full"
+                                                  />
+                                              </div>
+                                              <div className="overflow-x-auto">
+                                                  <table className="min-w-full border text-sm">
+                                                      <thead>
+                                                          <tr className="bg-gray-100">
+                                                              <th className="p-2 border text-black">Seleccionar</th>
+                                                              <th className="p-2 border text-black">Usuario</th>
+                                                              <th className="p-2 border text-black">ID</th>
+                                                              <th className="p-2 border text-black">Roles actuales</th>
+                                                          </tr>
+                                                      </thead>
+                                                      <tbody>
+                                                          {paginatedFilteredUsers.map(user => (
+                                                              <tr key={user.user_id} className='hover:bg-gray-200'>
+                                                                  <td className="p-2 border text-center">
+                                                                      <input
+                                                                          type="radio"
+                                                                          name="selectedUser"
+                                                                          checked={selectedUserId === user.user_id}
+                                                                          onChange={() => setSelectedUserId(user.user_id)}
+                                                                      />
+                                                                  </td>
+                                                                  <td className="p-2 border font-medium">{user.username}</td>
+                                                                  <td className="p-2 border text-xs text-gray-500">{user.user_id}</td>
+                                                                  <td className="p-2 border">
+                                                                      {user.roles && user.roles.length > 0 ? (
+                                                                          <div className="flex flex-wrap gap-1">
+                                                                              {user.roles.map(role => (
+                                                                                  <span key={role} className="inline-flex items-center px-2 py-1 rounded bg-[#017979] text-white text-xs font-semibold gap-1">
+                                                                                      {role}
+                                                                                      <button
+                                                                                          type="button"
+                                                                                          className="ml-1 text-white hover:text-red-400"
+                                                                                          title={`Desasignar rol ${role}`}
+                                                                                          onClick={() => handleRemoveRole(user.user_id, role)}
+                                                                                      >
+                                                                                          <XCircle className="h-3 w-3" />
+                                                                                      </button>
+                                                                                  </span>
+                                                                              ))}
+                                                                          </div>
+                                                                      ) : (
+                                                                          <span className="text-gray-400 text-xs">Sin roles</span>
+                                                                      )}
+                                                                  </td>
+                                                              </tr>
+                                                          ))}
+                                                      </tbody>
+                                                  </table>
+                                                  {/* Paginado */}
+                                                  <div className="flex justify-center gap-2 mt-2">
+                                                      <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Anterior</Button>
+                                                      <span>Página {currentPage}</span>
+                                                      <Button disabled={currentPage * usersPerPage >= filteredUsers.length} onClick={() => setCurrentPage(currentPage + 1)}>Siguiente</Button>
+                                                  </div>
+                                              </div>
+                                              {/* Select de roles */}
+                                              <div className="mt-4">
+                                                  <label className="block mb-1 text-sm font-medium text-gray-700">Selecciona un rol:</label>
+                                                  <select className="w-full p-2 rounded text-black bg-white border border-gray-300" value={selectedRoleId} onChange={e => setSelectedRoleId(e.target.value)}>
+                                                      <option value="">Selecciona un rol</option>
+                                                      {roles.map(role => (
+                                                          <option key={role.role_id} value={role.role_id}>{role.role_name}</option>
+                                                      ))}
+                                                  </select>
+                                              </div>
+                                              <DialogFooter className='justify-between mt-4'>
+                                                  <Button type="submit" className="bg-[#017979] hover:bg-[#015e5e] text-white" onClick={handleAssignRole}>
+                                                      <span className="text-black">Asignar Rol</span>
+                                                  </Button>
+                                                  <Button type="button" variant="secondary" onClick={() => {
+                                                      setIsRolesModalOpen(false);
+                                                      setSelectedUserId('');
+                                                      setSelectedRoleId('');
+                                                  }}>
+                                                      Cancelar
+                                                  </Button>
+                                              </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                             )}
                             {/* Otros botones visibles para todos */}
