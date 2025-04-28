@@ -5,6 +5,7 @@ import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { CreateUserForm } from '@/components/users/CreateUserForm';
 import { RolesManager } from '@/components/users/RolesManager';
+import { UsersTable } from '@/components/users/UsersTable'; // Nuevo componente
 import { Dialog } from '@/components/ui/dialog';
 import { VideoBackground } from '@/components/background/video-background';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +16,7 @@ const HomePage = () => {
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
+  const [showUsersTable, setShowUsersTable] = useState(false); // Nuevo estado
   const { toast } = useToast();
   const router = useRouter();
   const isAuthenticated = isAuthenticatedState;
@@ -70,6 +72,16 @@ const HomePage = () => {
     }
   }, [router]);
 
+  // Handler para mostrar la tabla de usuarios
+  const handleShowUsersTable = () => {
+    setShowUsersTable(true);
+  };
+
+  // Opcional: Si quieres ocultar la tabla al ir a Dashboard, puedes hacer:
+  const handleDashboard = () => {
+    setShowUsersTable(false);
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -88,11 +100,17 @@ const HomePage = () => {
           onLogout={handleLogout}
           onCreateUserClick={() => setIsModalOpen(true)}
           onRolesClick={() => setIsRolesModalOpen(true)}
-          activeRoute="dashboard"
+          onShowUsersTable={handleShowUsersTable} // Nuevo prop
+          activeRoute={showUsersTable ? 'user-management' : 'dashboard'}
         />
         <main className="flex-1 p-6 bg-background/80 backdrop-blur-sm overflow-y-auto">
           <h1 className="text-2xl font-bold mb-4 text-foreground">Welcome to MiniHack Analyzer</h1>
           <p className="text-muted-foreground">Your dashboard content goes here.</p>
+          {showUsersTable && (
+            <div className="mt-8">
+              <UsersTable />
+            </div>
+          )}
         </main>
         {/* Modal para crear usuario */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

@@ -10,6 +10,7 @@ import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus } from
  * @param onLogout Callback para ejecutar al hacer logout
  * @param onCreateUserClick Callback para abrir el modal de crear usuario
  * @param onRolesClick Callback para abrir el modal de gestión de roles
+ * @param onShowUsersTable Callback para mostrar la tabla de usuarios en el homepage (NUEVO)
  * @param activeRoute (opcional) Ruta activa para resaltar el menú correspondiente
  */
 export interface SidebarProps {
@@ -18,6 +19,7 @@ export interface SidebarProps {
   onLogout: () => void;
   onCreateUserClick: () => void;
   onRolesClick: () => void;
+  onShowUsersTable?: () => void; // Nuevo prop
   activeRoute?: string;
 }
 
@@ -27,17 +29,7 @@ export interface SidebarProps {
  * - Muestra el email del usuario.
  * - Permite expandir/colapsar.
  * - Muestra opciones de administración según roles.
- * - Expone callbacks para acciones (logout, crear usuario, roles).
- * 
- * Ejemplo de uso:
- * <Sidebar
- *   email={user.email}
- *   userRoles={user.roles}
- *   onLogout={handleLogout}
- *   onCreateUserClick={() => setShowCreateUserModal(true)}
- *   onRolesClick={() => setShowRolesModal(true)}
- *   activeRoute="dashboard"
- * />
+ * - Expone callbacks para acciones (logout, crear usuario, roles, mostrar tabla usuarios).
  */
 export const Sidebar: React.FC<SidebarProps> = ({
   email,
@@ -45,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   onCreateUserClick,
   onRolesClick,
+  onShowUsersTable,
   activeRoute,
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -59,6 +52,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const handleDashboardClick = () => {
     setAreAdminButtonsVisible(false);
     router.push('/');
+  };
+
+  // Handler para User Management: muestra submenú y la tabla de usuarios
+  const handleUserManagementClick = () => {
+    setAreAdminButtonsVisible((v) => !v);
+    if (onShowUsersTable) onShowUsersTable();
   };
 
   return (
@@ -106,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               variant="ghost"
               className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'user-management' ? 'active' : ''}`}
               title="Administrator User"
-              onClick={() => setAreAdminButtonsVisible((v) => !v)}
+              onClick={handleUserManagementClick}
               aria-expanded={areAdminButtonsVisible}
               aria-controls="sidebar-admin-buttons"
             >
