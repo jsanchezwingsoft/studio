@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Eye, KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { ResetPasswordModal } from './ResetPasswordModal';
 
 interface User {
   user_id: string;
@@ -18,18 +20,25 @@ interface User {
   roles: string[];
 }
 interface UsersTableProps {
+  onViewUser?: (user: User) => void;
+  onChangePassword?: (user: User) => void;
   onEditUser?: (user: User) => void;
   onDeleteUser?: (user: User) => void;
 }
 const API_URL = 'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/list-with-roles';
 
 export const UsersTable: React.FC<UsersTableProps> = ({
+  onViewUser,
+  onChangePassword,
   onEditUser,
   onDeleteUser,
 }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  // Estado para el modal de reset password
+  const [resetUser, setResetUser] = useState<{ user_id: string; username: string } | null>(null);
 
   const fetchUsers = async (isInitial = false) => {
     try {
@@ -104,30 +113,53 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {onEditUser && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => onEditUser(user)}
-                        >
-                          Editar
-                        </Button>
-                      )}
-                      {onDeleteUser && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => onDeleteUser(user)}
-                        >
-                          Eliminar
-                        </Button>
-                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Ver usuario"
+                        onClick={() => onViewUser && onViewUser(user)}
+                      >
+                        <Eye className="w-5 h-5 text-blue-600" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Cambiar contraseña"
+                        onClick={() => setResetUser({ user_id: user.user_id, username: user.username })}
+                      >
+                        <KeyRound className="w-5 h-5 text-yellow-500" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Actualizar usuario"
+                        onClick={() => onEditUser && onEditUser(user)}
+                      >
+                        <Pencil className="w-5 h-5 text-green-600" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Eliminar usuario"
+                        onClick={() => onDeleteUser && onDeleteUser(user)}
+                      >
+                        <Trash2 className="w-5 h-5 text-red-600" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          {/* Modal de reset password */}
+          {resetUser && (
+            <ResetPasswordModal
+              open={!!resetUser}
+              onClose={() => setResetUser(null)}
+              userId={resetUser.user_id}
+              username={resetUser.username}
+            />
+          )}
         </>
       )}
     </div>
