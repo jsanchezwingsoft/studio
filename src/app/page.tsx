@@ -98,36 +98,16 @@ const HomePage = () => {
     const fetchUsersAndRoles = async () => {
         try {
             const usersResponse = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/list-with-roles', { method: 'GET' });
-            if (usersResponse.error === 'not_authenticated') {
-                toast({ variant: "destructive", title: "Sesión expirada", description: "Por favor, inicia sesión de nuevo." });
-                handleLogout(); // O redirigir al login
-                return;
-            }
             if (usersResponse.ok) {
                 const usersData = await usersResponse.json();
                 setUsers(usersData);
-            } else if (usersResponse.error === 'not_found') {
-                 toast({ variant: "destructive", title: "Error", description: usersResponse.message });
-            } else {
-                 toast({ variant: "destructive", title: "Error", description: "No se pudo obtener la lista de usuarios." });
             }
-
             const rolesResponse = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/roles/list', { method: 'GET' });
-             if (rolesResponse.error === 'not_authenticated') {
-                toast({ variant: "destructive", title: "Sesión expirada", description: "Por favor, inicia sesión de nuevo." });
-                handleLogout();
-                return;
-            }
             if (rolesResponse.ok) {
                 const rolesData = await rolesResponse.json();
                 setRoles(rolesData);
-            } else if (rolesResponse.error === 'not_found') {
-                 toast({ variant: "destructive", title: "Error", description: rolesResponse.message });
-            } else {
-                 toast({ variant: "destructive", title: "Error", description: "No se pudo obtener la lista de roles." });
             }
         } catch (error) {
-            console.error("Error fetching users/roles:", error);
             toast({
                 variant: "destructive",
                 title: "Error al obtener usuarios o roles",
@@ -159,18 +139,13 @@ const HomePage = () => {
                     role_id: selectedRoleId,
                 },
             });
-            if (response.error === 'not_authenticated') {
-                toast({ variant: "destructive", title: "Sesión expirada", description: "Por favor, inicia sesión de nuevo." });
-                handleLogout();
-                return;
-            }
             if (response.status >= 200 && response.status < 300) {
                 const data = await response.json();
                 toast({
-                    variant: "default", // Changed to default/success
+                    variant: "success",
                     title: "Rol asignado con éxito",
                     description: (
-                        <Alert variant="default" className='flex gap-2 border-none shadow-none p-0'>
+                        <Alert className='flex gap-2'>
                             <div className='flex flex-col'>
                                 <AlertTitle>Usuario</AlertTitle>
                                 <AlertDescription>{data.user_id}</AlertDescription>
@@ -187,23 +162,14 @@ const HomePage = () => {
                 setSelectedRoleId('');
                 fetchUsersAndRoles(); // Refresca la tabla
             } else {
-                let errorMsg = "Error inesperado al asignar rol.";
-                try {
-                    const errorData = await response.json();
-                     if (response.error === 'not_found') {
-                        errorMsg = errorData.message || "Endpoint no encontrado.";
-                    } else {
-                        errorMsg = errorData.detail || errorMsg;
-                    }
-                } catch (e) { /* Ignore json parsing error if response is not json */ }
+                const errorData = await response.json();
                 toast({
                     variant: "destructive",
                     title: "Error al asignar rol",
-                    description: errorMsg,
+                    description: errorData.detail || "Error inesperado.",
                 });
             }
         } catch (error) {
-             console.error("Error assigning role:", error);
             toast({
                 variant: "destructive",
                 title: "Error al asignar rol",
@@ -230,36 +196,22 @@ const HomePage = () => {
                     role_id: role.role_id,
                 },
             });
-            if (response.error === 'not_authenticated') {
-                toast({ variant: "destructive", title: "Sesión expirada", description: "Por favor, inicia sesión de nuevo." });
-                handleLogout();
-                return;
-            }
             if (response.status >= 200 && response.status < 300) {
                 toast({
-                    variant: "default", // Changed to default/success
+                    variant: "success",
                     title: "Rol desasignado con éxito",
                     description: `Rol ${role_name} desasignado del usuario.`,
                 });
                 fetchUsersAndRoles(); // Refresca la tabla
             } else {
-                 let errorMsg = "Error inesperado al desasignar rol.";
-                try {
-                    const errorData = await response.json();
-                     if (response.error === 'not_found') {
-                        errorMsg = errorData.message || "Endpoint no encontrado.";
-                    } else {
-                        errorMsg = errorData.detail || errorMsg;
-                    }
-                } catch (e) { /* Ignore json parsing error */ }
+                const errorData = await response.json();
                 toast({
                     variant: "destructive",
                     title: "Error al desasignar rol",
-                    description: errorMsg,
+                    description: errorData.detail || "Error inesperado.",
                 });
             }
         } catch (error) {
-             console.error("Error removing role:", error);
             toast({
                 variant: "destructive",
                 title: "Error al desasignar rol",
@@ -292,18 +244,13 @@ const HomePage = () => {
                     body: user,
                 }
             );
-            if (response.error === 'not_authenticated') {
-                toast({ variant: "destructive", title: "Sesión expirada", description: "Por favor, inicia sesión de nuevo." });
-                handleLogout();
-                return;
-            }
             if (response.status >= 200 && response.status < 300) {
                 const data = await response.json();
                 toast({
-                    variant: "default", // Changed to default/success
+                    variant: "success",
                     title: "Usuario creado con éxito",
                     description: (
-                        <Alert variant="default" className='flex gap-2 border-none shadow-none p-0'>
+                        <Alert className='flex gap-2'>
                             <div className='flex flex-col'>
                                 <AlertTitle>Usuario</AlertTitle>
                                 <AlertDescription>{data.username}</AlertDescription>
@@ -320,28 +267,20 @@ const HomePage = () => {
                 setNewPassword('');
                 setNewPhone('');
             } else {
-                let errorMsg = "Error inesperado al crear usuario.";
-                try {
-                    const errorData = await response.json()
-                    if (response.error === 'not_found') {
-                        errorMsg = errorData.message || "Endpoint no encontrado.";
-                    } else {
-                        errorMsg = errorData.detail || errorData.message || errorMsg; // Use detail first, then message
-                    }
-                } catch(e) { /* Ignore json parsing error */ }
+                const errorData = await response.json()
                 toast({
                     variant: "destructive",
                     title: "Error al crear el usuario",
-                    description: errorMsg,
+                    description: errorData.message || "Error inesperado.",
                 });
             }
         } catch (error) {
-            console.error("Error creating user:", error);
             toast({
                 variant: "destructive",
                 title: "Error al crear el usuario",
                 description: "Error inesperado.",
             });
+            console.error("Error inesperado:", error)
         }
     };
 
@@ -355,48 +294,67 @@ const HomePage = () => {
         return <div className="flex items-center justify-center min-h-screen"><p className="text-foreground z-10">Loading...</p></div>;
     }
 
+    const heartbeatStyle = `
+    @keyframes heartbeat {
+      0%, 100% {
+        box-shadow: 0 0 0 0 #01797999, 0 0 0 0 #01797955;
+      }
+      40% {
+        box-shadow: 0 0 0 8px #01797933, 0 0 0 16px #01797922;
+      }
+      60% {
+        box-shadow: 0 0 0 4px #01797966, 0 0 0 8px #01797933;
+      }
+    }
+    .heartbeat {
+      animation: heartbeat 1.5s infinite;
+    }
+    `;
+
     const canSeeAdminButtons = userRoles.includes('superadmin') || userRoles.includes('contributor');
 
     return (
         <div className="relative h-screen w-screen overflow-hidden">
+            <style>{heartbeatStyle}</style>
             <VideoBackground />
             <div className="relative flex min-h-screen z-10">
                 <aside className={`sidebar transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-20'} p-4 flex flex-col justify-between items-center`}>
-                    <Button variant="ghost" className='absolute right-0 top-1/2 z-20 p-1 rounded-full bg-black/40 text-white hover:bg-primary transform -translate-y-1/2' onClick={toggleSidebar}>
+                    <Button variant="ghost" className='absolute right-0 top-1/2 z-20 p-1 rounded-full bg-black/40 text-white hover:bg-[#017979] transform -translate-y-1/2' onClick={toggleSidebar}>
                         {isSidebarOpen ? <ChevronsLeft className="h-5 w-5" /> : <ChevronsRight className="h-5 w-5" />}
                     </Button>
                     <div className="flex flex-col items-center w-full mt-10">
                         <div className='flex gap-2 items-center mb-8'>
                             {isSidebarOpen && (
                                 <span
-                                    className='px-4 py-2 rounded-full font-semibold text-white bg-primary/80 shadow-lg border border-border'
+                                    className='px-4 py-2 rounded-full font-semibold text-white bg-[#017979] shadow-lg border border-white heartbeat'
+                                    style={{ boxShadow: '0 0 0 0 #017979' }}
                                 >
                                     {email || 'No email'}
                                 </span>
                             )}
                         </div>
                         <nav className="space-y-4 flex flex-col items-center w-full">
-                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-background/20 text-foreground p-2 rounded-md hover:bg-primary hover:text-primary-foreground`} title="Dashboard">
-                                <Home className="h-5 w-5 flex-shrink-0 " />
+                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/40 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Dashboard">
+                                <Home className="h-5 w-5 flex-shrink-0 text-white" />
                                 {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Dashboard</span>}
                             </Button>
                             {canSeeAdminButtons && (
                                 <Button
                                     variant="ghost"
-                                    className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-background/20 text-foreground p-2 rounded-md hover:bg-primary hover:text-primary-foreground`}
-                                    title="user management"
-                                    onClick={() => setAreAdminButtonsVisible(!areAdminButtonsVisible)}
+                                    className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`}
+                                    title="Administrator User"
+                                    onClick={() => setAreAdminButtonsVisible(!areAdminButtonsVisible)}                                   
                                 >
-                                    <Users className="h-5 w-5 flex-shrink-0"/>
-                                    {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>User Management</span>}
-                                </Button>
+                                    <Users className="h-5 w-5 flex-shrink-0 text-white"/>
+                                    {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>user management</span>}
+                                </Button>                                
                             )}
                             {areAdminButtonsVisible && canSeeAdminButtons && (
-                              <div className="flex flex-col items-center w-full pl-4 border-l-2 border-primary/30 ml-2"> {/* Indent admin buttons */}
+                              <div className="flex flex-col items-center w-full">
                                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                                         <DialogTrigger asChild>
-                                                <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-background/10 text-foreground p-2 rounded-md hover:bg-primary/80 hover:text-primary-foreground`} title="Create User">
-                                                    <UserPlus className="h-5 w-5 flex-shrink-0"/>
+                                                <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Create User">
+                                                    <UserPlus className="h-5 w-5 flex-shrink-0 text-white"/>
                                                     {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Create User</span>}
                                                 </Button>
                                         </DialogTrigger>
@@ -434,11 +392,11 @@ const HomePage = () => {
                                     {/* MODAL PARA ASIGNAR ROLES */}
                                     <Dialog open={isRolesModalOpen} onOpenChange={setIsRolesModalOpen}>
                                         <DialogTrigger asChild>
-                                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-background/10 text-foreground p-2 rounded-md hover:bg-primary/80 hover:text-primary-foreground`} title="Roles" onClick={openRolesModal}>
-                                                <Users className="h-5 w-5 flex-shrink-0"/>
+                                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Roles" onClick={openRolesModal}>
+                                                <Users className="h-5 w-5 flex-shrink-0 text-white"/>
                                                 {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Roles</span>}
                                             </Button>
-                                        </DialogTrigger>
+                                        </DialogTrigger>                                        
                                         <DialogContent className="sm:max-w-[900px]">
                                               <DialogHeader>
                                                   <DialogTitle>Asignar/Desasignar Rol a Usuario</DialogTitle>
@@ -461,36 +419,35 @@ const HomePage = () => {
                                               <div className="overflow-x-auto">
                                                   <table className="min-w-full border text-sm">
                                                       <thead>
-                                                          <tr className="bg-muted/30">
-                                                              <th className="p-2 border text-left">Seleccionar</th>
-                                                              <th className="p-2 border text-left">Usuario</th>
-                                                              <th className="p-2 border text-left">ID</th>
-                                                              <th className="p-2 border text-left">Roles actuales</th>
+                                                          <tr className="bg-gray-100">
+                                                              <th className="p-2 border text-black">Seleccionar</th>
+                                                              <th className="p-2 border text-black">Usuario</th>
+                                                              <th className="p-2 border text-black">ID</th>
+                                                              <th className="p-2 border text-black">Roles actuales</th>
                                                           </tr>
                                                       </thead>
                                                       <tbody>
                                                           {paginatedFilteredUsers.map(user => (
-                                                              <tr key={user.user_id} className='hover:bg-muted/20'>
+                                                              <tr key={user.user_id} className='hover:bg-gray-200'>
                                                                   <td className="p-2 border text-center">
                                                                       <input
                                                                           type="radio"
                                                                           name="selectedUser"
                                                                           checked={selectedUserId === user.user_id}
                                                                           onChange={() => setSelectedUserId(user.user_id)}
-                                                                           className="accent-primary" // Style radio button
                                                                       />
                                                                   </td>
                                                                   <td className="p-2 border font-medium">{user.username}</td>
-                                                                  <td className="p-2 border text-xs text-muted-foreground">{user.user_id}</td>
+                                                                  <td className="p-2 border text-xs text-gray-500">{user.user_id}</td>
                                                                   <td className="p-2 border">
                                                                       {user.roles && user.roles.length > 0 ? (
                                                                           <div className="flex flex-wrap gap-1">
                                                                               {user.roles.map(role => (
-                                                                                  <span key={role} className="inline-flex items-center px-2 py-1 rounded bg-primary/80 text-primary-foreground text-xs font-semibold gap-1">
+                                                                                  <span key={role} className="inline-flex items-center px-2 py-1 rounded bg-[#017979] text-white text-xs font-semibold gap-1">
                                                                                       {role}
                                                                                       <button
                                                                                           type="button"
-                                                                                          className="ml-1 text-primary-foreground/70 hover:text-destructive"
+                                                                                          className="ml-1 text-white hover:text-red-400"
                                                                                           title={`Desasignar rol ${role}`}
                                                                                           onClick={() => setConfirmRemove({ user_id: user.user_id, role_name: role })}
                                                                                       >
@@ -500,7 +457,7 @@ const HomePage = () => {
                                                                               ))}
                                                                           </div>
                                                                       ) : (
-                                                                          <span className="text-muted-foreground text-xs">Sin roles</span>
+                                                                          <span className="text-gray-400 text-xs">Sin roles</span>
                                                                       )}
                                                                   </td>
                                                               </tr>
@@ -508,16 +465,16 @@ const HomePage = () => {
                                                       </tbody>
                                                   </table>
                                                   {/* Paginado */}
-                                                  <div className="flex justify-center gap-2 mt-4">
-                                                      <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Anterior</Button>
-                                                      <span className="text-sm self-center">Página {currentPage}</span>
-                                                      <Button variant="outline" size="sm" disabled={currentPage * usersPerPage >= filteredUsers.length} onClick={() => setCurrentPage(currentPage + 1)}>Siguiente</Button>
+                                                  <div className="flex justify-center gap-2 mt-2">
+                                                      <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>Anterior</Button>
+                                                      <span>Página {currentPage}</span>
+                                                      <Button disabled={currentPage * usersPerPage >= filteredUsers.length} onClick={() => setCurrentPage(currentPage + 1)}>Siguiente</Button>
                                                   </div>
                                               </div>
                                               {/* Select de roles */}
                                               <div className="mt-4">
-                                                  <label className="block mb-1 text-sm font-medium text-foreground">Selecciona un rol:</label>
-                                                  <select className="w-full p-2 rounded border bg-input text-foreground" value={selectedRoleId} onChange={e => setSelectedRoleId(e.target.value)}>
+                                                  <label className="block mb-1 text-sm font-medium text-gray-700">Selecciona un rol:</label>
+                                                  <select className="w-full p-2 rounded text-black bg-white border border-gray-300" value={selectedRoleId} onChange={e => setSelectedRoleId(e.target.value)}>
                                                       <option value="">Selecciona un rol</option>
                                                       {roles.map(role => (
                                                           <option key={role.role_id} value={role.role_id}>{role.role_name}</option>
@@ -525,7 +482,7 @@ const HomePage = () => {
                                                   </select>
                                               </div>
                                               <DialogFooter className='justify-between mt-4'>
-                                                  <Button type="submit" onClick={handleAssignRole}>
+                                                  <Button type="submit" className="bg-[#017979] hover:bg-[#015e5e] text-white" onClick={handleAssignRole}>
                                                       Asignar Rol
                                                   </Button>
                                                   <Button type="button" variant="secondary" onClick={() => {
@@ -538,11 +495,11 @@ const HomePage = () => {
                                               </DialogFooter>
                                               {/* Confirmación para desasignar */}
                                               {confirmRemove && (
-                                                  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
-                                                      <div className="bg-card p-6 rounded-lg shadow-lg flex flex-col items-center border border-border">
-                                                          <p className="mb-4 text-card-foreground">¿Estás seguro que deseas desasignar el rol <b className="text-accent">{confirmRemove.role_name}</b>?</p>
+                                                  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+                                                      <div className="bg-white p-6 rounded shadow-lg flex flex-col items-center">
+                                                          <p className="mb-4 text-black">¿Estás seguro que deseas desasignar el rol <b>{confirmRemove.role_name}</b>?</p>
                                                           <div className="flex gap-4">
-                                                              <Button variant="destructive" onClick={confirmRemoveRole}>
+                                                              <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmRemoveRole}>
                                                                   Sí, desasignar
                                                               </Button>
                                                               <Button variant="secondary" onClick={() => setConfirmRemove(null)}>
@@ -557,46 +514,31 @@ const HomePage = () => {
                                 </div>
                             )}
                             {/* Otros botones visibles para todos */}
-                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-background/20 text-foreground p-2 rounded-md hover:bg-primary hover:text-primary-foreground`} title="Button 1">
-                                <Mail className="h-5 w-5 flex-shrink-0" />
-                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Button 1</span>}
+                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Button 1">
+                                <Mail className="h-5 w-5 flex-shrink-0 text-white" />
+                                {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Button 1</span>}                                
                             </Button>
-                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-background/20 text-foreground p-2 rounded-md hover:bg-primary hover:text-primary-foreground`} title="Button 2">
-                                <Mail className="h-5 w-5 flex-shrink-0"/>
+                            <Button variant="ghost" className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`} title="Button 2">
+                                <Mail className="h-5 w-5 flex-shrink-0 text-white"/>
                                 {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Button 2</span>}
-                            </Button>
+                            </Button> 
                         </nav>
                     </div>
                     <div className='w-full flex justify-center mt-auto'>
                         <Button
                             variant="ghost"
-                            className={`w-full text-sm ${isSidebarOpen ? 'gap-2 justify-start' : 'justify-center'} bg-background/20 text-foreground p-2 rounded-md hover:bg-destructive hover:text-destructive-foreground`}
+                            className={`w-full text-sm ${isSidebarOpen ? 'gap-2 justify-start' : 'justify-center'} bg-black/60 text-white p-2 rounded-md hover:bg-[#017979]`}
                             onClick={handleLogout}
                             title="Logout"
                         >
-                            <LogOut className='h-5 w-5 flex-shrink-0' />
+                            <LogOut className='h-5 w-5 flex-shrink-0 text-white' />
                             {isSidebarOpen && <span className='transition-all duration-300 ease-in-out overflow-hidden'>Logout</span>}
                         </Button>
                     </div>
                 </aside>
                 <main className="flex-1 p-6 bg-background/80 backdrop-blur-sm overflow-y-auto">
-                   <h1 className="text-2xl font-bold mb-4 text-foreground cyber-flicker">Welcome to MiniHack Analyzer</h1>
+                   <h1 className="text-2xl font-bold mb-4 text-foreground">Welcome to MiniHack Analyzer</h1>
                    <p className="text-muted-foreground">Your dashboard content goes here.</p>
-                   {/* Example Content */}
-                   <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="card p-4">
-                            <h2 className="text-lg font-semibold text-card-foreground mb-2">Stat Card 1</h2>
-                            <p className="text-sm text-muted-foreground">Some quick stats or info.</p>
-                        </div>
-                        <div className="card p-4">
-                             <h2 className="text-lg font-semibold text-card-foreground mb-2">Stat Card 2</h2>
-                            <p className="text-sm text-muted-foreground">More data points here.</p>
-                        </div>
-                         <div className="card p-4">
-                             <h2 className="text-lg font-semibold text-card-foreground mb-2">Stat Card 3</h2>
-                            <p className="text-sm text-muted-foreground">Analytics overview.</p>
-                        </div>
-                   </div>
                 </main>
             </div>
         </div>
