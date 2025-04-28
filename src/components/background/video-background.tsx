@@ -17,7 +17,8 @@ export const VideoBackground = () => {
         className="min-w-full min-h-full absolute object-cover"
       />
       {/* Dark overlay for better text contrast */}
-      <div className="absolute bg-black/60 top-0 left-0 w-full h-full"></div>
+      <div className="absolute bg-black/60 top-0 left-0 w-full h-full"/>
     </div>
   );
 };
+export default VideoBackground;
