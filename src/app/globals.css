@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 @layer base {
   :root {
     /* --- Cybersecurity Theme --- */
@@ -11,32 +10,26 @@
     --card-foreground: 160 60% 90%;
     --popover: 220 40% 14% / 0.92;
     --popover-foreground: 160 60% 90%;
-
     --primary: 160 100% 45%;     /* Cyber Green */
     --primary-foreground: 220 60% 8%; /* Deep bg */
     --secondary: 210 40% 22%;    /* Dark blue */
     --secondary-foreground: 160 60% 90%;
     --muted: 220 20% 18%;        /* Muted navy */
     --muted-foreground: 160 30% 60%;
-
     --accent: 30 100% 55%;       /* Orange Alert */
     --accent-foreground: 220 60% 8%;
     --destructive: 0 85% 60%;    /* Alert Red */
     --destructive-foreground: 0 0% 100%;
-
     --border: 160 100% 30% / 0.3; /* Subtle green border */
     --input: 220 20% 18%;
     --ring: 160 100% 45%;        /* Cyber Green for focus */
-
     /* Chart Colors: Cybersecurity palette */
     --chart-1: 160 100% 45%;     /* Green */
     --chart-2: 200 100% 60%;     /* Blue */
     --chart-3: 30 100% 55%;      /* Orange */
     --chart-4: 0 85% 60%;        /* Red */
     --chart-5: 280 100% 60%;     /* Purple */
-
     --radius: 1.25rem;
-
     /* Sidebar: Glassy, with neon accent border */
     --sidebar-background: 220 40% 12% / 0.85;
     --sidebar-foreground: 160 60% 90%;
@@ -47,7 +40,6 @@
     --sidebar-border: 160 100% 45% / 0.4;
     --sidebar-ring: 30 100% 55%;
   }
-
   .dark {
     /* --- Cybersecurity Dark Theme (already set above) --- */
      --background: 220 60% 8%;    /* Deep blue-black */
@@ -56,32 +48,26 @@
     --card-foreground: 160 60% 90%;
     --popover: 220 40% 14% / 0.92;
     --popover-foreground: 160 60% 90%;
-
     --primary: 160 100% 45%;     /* Cyber Green */
     --primary-foreground: 220 60% 8%; /* Deep bg */
     --secondary: 210 40% 22%;    /* Dark blue */
     --secondary-foreground: 160 60% 90%;
     --muted: 220 20% 18%;        /* Muted navy */
     --muted-foreground: 160 30% 60%;
-
     --accent: 30 100% 55%;       /* Orange Alert */
     --accent-foreground: 220 60% 8%;
     --destructive: 0 85% 60%;    /* Alert Red */
     --destructive-foreground: 0 0% 100%;
-
     --border: 160 100% 30% / 0.3; /* Subtle green border */
     --input: 220 20% 18%;
     --ring: 160 100% 45%;        /* Cyber Green for focus */
-
     /* Chart Colors: Cybersecurity palette */
     --chart-1: 160 100% 45%;     /* Green */
     --chart-2: 200 100% 60%;     /* Blue */
     --chart-3: 30 100% 55%;      /* Orange */
     --chart-4: 0 85% 60%;        /* Red */
     --chart-5: 280 100% 60%;     /* Purple */
-
     --radius: 1.25rem;
-
     /* Sidebar: Glassy, with neon accent border */
     --sidebar-background: 220 40% 12% / 0.85;
     --sidebar-foreground: 160 60% 90%;
@@ -93,7 +79,6 @@
     --sidebar-ring: 30 100% 55%;
   }
 }
-
 @layer base {
   * {
     @apply border-border;
@@ -104,7 +89,6 @@
     overflow-x: hidden;
     height: 100%; /* Ensure html takes full height */
   }
-
   body {
     @apply bg-background text-foreground;
     font-family: 'JetBrains Mono', 'Fira Mono', 'Menlo', 'Consolas', monospace;
@@ -112,7 +96,6 @@
     min-height: 100vh; /* Ensure body takes at least full viewport height */
     position: relative; /* Needed for absolute positioning of children */
   }
-
   .card {
     background: hsla(var(--card));
     box-shadow:
@@ -165,11 +148,12 @@
     opacity: 0.7;
     z-index: 2;
   }
+  /* CORRECCIÓN: Cambia color de .active a blanco */
   .sidebar .active {
-    background: linear-gradient(90deg, hsla(var(--primary), 0.15), transparent);
-    border-left: 4px solid hsl(var(--sidebar-accent));
-    color: hsl(var(--sidebar-accent));
-    text-shadow: 0 0 8px hsl(var(--sidebar-accent)), 0 0 2px #fff;
+    background: linear-gradient(90deg, #01797922, transparent);
+    border-left: 4px solid #017979;
+    color: #fff;
+    text-shadow: 0 0 8px #017979, 0 0 2px #fff;
   }
   .btn-primary {
     background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
@@ -189,7 +173,6 @@
   tr:hover{
     @apply bg-black text-white
   }
-
    .btn-danger {
     background: linear-gradient(90deg, hsl(var(--destructive)), hsl(var(--accent)));
     color: hsl(var(--destructive-foreground));
