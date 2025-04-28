@@ -17,12 +17,10 @@ interface User {
   is_active: boolean;
   roles: string[];
 }
-
 interface UsersTableProps {
   onEditUser?: (user: User) => void;
   onDeleteUser?: (user: User) => void;
 }
-
 const API_URL = 'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/list-with-roles';
 
 export const UsersTable: React.FC<UsersTableProps> = ({
@@ -37,7 +35,6 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     try {
       if (isInitial) setLoading(true);
       else setRefreshing(true);
-
       const token = sessionStorage.getItem('accessToken');
       const response = await fetch(API_URL, {
         method: 'GET',
@@ -46,7 +43,6 @@ export const UsersTable: React.FC<UsersTableProps> = ({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
-
       if (!response.ok) throw new Error('Error al obtener los usuarios');
       const data = await response.json();
       setUsers(data);
@@ -94,10 +90,11 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.user_id}</TableCell>
                   <TableCell>
-                    {user.is_active
-                      ? <span className="text-green-600 font-semibold">Sí</span>
-                      : <span className="text-red-600 font-semibold">No</span>
-                    }
+                    {user.is_active ? (
+                      <span className="heartbeat-green">Sí</span>
+                    ) : (
+                      <span className="heartbeat-red">No</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {user.roles && user.roles.length > 0

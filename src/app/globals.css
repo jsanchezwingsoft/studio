@@ -219,6 +219,50 @@
     80% { opacity: 1; filter: brightness(1.2); }
     90% { opacity: 0.9; filter: brightness(1.3); }
   }
+
+  /* Heartbeat verde */
+  @keyframes heartbeat-green {
+    0%, 100% {
+      box-shadow: 0 0 0 0 #22c55e99, 0 0 0 0 #22c55e55;
+    }
+    40% {
+      box-shadow: 0 0 0 8px #22c55e33, 0 0 0 16px #22c55e22;
+    }
+    60% {
+      box-shadow: 0 0 0 4px #22c55e66, 0 0 0 8px #22c55e33;
+    }
+  }
+  .heartbeat-green {
+    animation: heartbeat-green 1.5s infinite;
+    background: #22c55e;
+    color: #fff;
+    border-radius: 9999px;
+    padding: 0.25em 1em;
+    display: inline-block;
+    font-weight: 600;
+  }
+
+  /* Heartbeat rojo */
+  @keyframes heartbeat-red {
+    0%, 100% {
+      box-shadow: 0 0 0 0 #ef444499, 0 0 0 0 #ef444455;
+    }
+    40% {
+      box-shadow: 0 0 0 8px #ef444433, 0 0 0 16px #ef444422;
+    }
+    60% {
+      box-shadow: 0 0 0 4px #ef444466, 0 0 0 8px #ef444433;
+    }
+  }
+  .heartbeat-red {
+    animation: heartbeat-red 1.5s infinite;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 9999px;
+    padding: 0.25em 1em;
+    display: inline-block;
+    font-weight: 600;
+  }
 }
 @keyframes heartbeat {
   0%, 100% {
