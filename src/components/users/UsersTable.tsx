@@ -11,11 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Eye, KeyRound, Pencil, Trash2 } from 'lucide-react';
 import { ResetPasswordModal } from './ResetPasswordModal';
+import { EditUserModal } from './EditUserModal';
 
 interface User {
   user_id: string;
   username: string;
   email: string;
+  phone?: string;
   is_active: boolean;
   roles: string[];
 }
@@ -39,6 +41,8 @@ export const UsersTable: React.FC<UsersTableProps> = ({
 
   // Estado para el modal de reset password
   const [resetUser, setResetUser] = useState<{ user_id: string; username: string } | null>(null);
+  // Estado para el modal de editar usuario
+  const [editUser, setEditUser] = useState<User | null>(null);
 
   const fetchUsers = async (isInitial = false) => {
     try {
@@ -68,6 +72,11 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     const intervalId = setInterval(() => fetchUsers(false), 5000);
     return () => clearInterval(intervalId);
   }, []);
+
+  // Actualiza la tabla tras editar usuario
+  const handleUserUpdated = () => {
+    fetchUsers(false);
+  };
 
   return (
     <div className="relative">
@@ -133,7 +142,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                         size="icon"
                         variant="ghost"
                         title="Actualizar usuario"
-                        onClick={() => onEditUser && onEditUser(user)}
+                        onClick={() => setEditUser(user)}
                       >
                         <Pencil className="w-5 h-5 text-green-600" />
                       </Button>
@@ -158,6 +167,15 @@ export const UsersTable: React.FC<UsersTableProps> = ({
               onClose={() => setResetUser(null)}
               userId={resetUser.user_id}
               username={resetUser.username}
+            />
+          )}
+          {/* Modal de editar usuario */}
+          {editUser && (
+            <EditUserModal
+              open={!!editUser}
+              onClose={() => setEditUser(null)}
+              user={editUser}
+              onUpdated={handleUserUpdated}
             />
           )}
         </>
