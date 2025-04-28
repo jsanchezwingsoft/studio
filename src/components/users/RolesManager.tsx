@@ -289,7 +289,7 @@ export const RolesManager: React.FC<RolesManagerProps> = ({
         </select>
       </div>
       <DialogFooter className='justify-between mt-4'>
-        <Button type="submit" className="bg-[#017979] hover:bg-[#015e5e] text-white" onClick={handleAssignRole}>
+        <Button type="submit" className="bg-[#017979] hover:bg-[#015e5e] text-black" onClick={handleAssignRole}>
           Asignar Rol
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>

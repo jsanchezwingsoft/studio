@@ -143,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Users className="h-5 w-5 flex-shrink-0 text-white" />
                 {isSidebarOpen && (
                   <span className="transition-all duration-300 ease-in-out overflow-hidden">
-                    Roles
+                   Roles
                   </span>
                 )}
               </Button>
