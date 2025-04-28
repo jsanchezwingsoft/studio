@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Eye, KeyRound, Pencil, Trash2 } from 'lucide-react';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import { EditUserModal } from './EditUserModal';
+import { DeleteUserModal } from './DeleteUserModal';
 
 interface User {
   user_id: string;
@@ -23,26 +24,20 @@ interface User {
 }
 interface UsersTableProps {
   onViewUser?: (user: User) => void;
-  onChangePassword?: (user: User) => void;
-  onEditUser?: (user: User) => void;
-  onDeleteUser?: (user: User) => void;
 }
 const API_URL = 'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/list-with-roles';
 
 export const UsersTable: React.FC<UsersTableProps> = ({
   onViewUser,
-  onChangePassword,
-  onEditUser,
-  onDeleteUser,
 }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  // Estado para el modal de reset password
+  // Estado para los modales
   const [resetUser, setResetUser] = useState<{ user_id: string; username: string } | null>(null);
-  // Estado para el modal de editar usuario
   const [editUser, setEditUser] = useState<User | null>(null);
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
 
   const fetchUsers = async (isInitial = false) => {
     try {
@@ -73,8 +68,8 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     return () => clearInterval(intervalId);
   }, []);
 
-  // Actualiza la tabla tras editar usuario
-  const handleUserUpdated = () => {
+  // Actualiza la tabla tras editar/eliminar usuario
+  const handleUserUpdatedOrDeleted = () => {
     fetchUsers(false);
   };
 
@@ -150,7 +145,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                         size="icon"
                         variant="ghost"
                         title="Eliminar usuario"
-                        onClick={() => onDeleteUser && onDeleteUser(user)}
+                        onClick={() => setDeleteUser(user)}
                       >
                         <Trash2 className="w-5 h-5 text-red-600" />
                       </Button>
@@ -175,7 +170,16 @@ export const UsersTable: React.FC<UsersTableProps> = ({
               open={!!editUser}
               onClose={() => setEditUser(null)}
               user={editUser}
-              onUpdated={handleUserUpdated}
+              onUpdated={handleUserUpdatedOrDeleted}
+            />
+          )}
+          {/* Modal de eliminar usuario */}
+          {deleteUser && (
+            <DeleteUserModal
+              open={!!deleteUser}
+              onClose={() => setDeleteUser(null)}
+              user={deleteUser}
+              onDeleted={handleUserUpdatedOrDeleted}
             />
           )}
         </>
