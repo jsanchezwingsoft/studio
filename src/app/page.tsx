@@ -82,6 +82,10 @@ const HomePage = () => {
                     console.log('Token invalid or expired, redirecting to login.');
                     handleLogout(); // Ensure clean logout if token is bad
                     return;
+                 } else if (response.error === 'not_found') {
+                    console.warn('Token verification endpoint not found (404). Assuming invalid token and logging out.');
+                    handleLogout(); // Ensure clean logout if endpoint is missing
+                    return;
                  } else {
                     throw new Error(`Authentication check failed: ${response.error}`);
                  }
@@ -117,24 +121,34 @@ const HomePage = () => {
   const handleShowUsersTable = () => {
     setShowUsersTable(true);
     setShowScansTable(false);
+    setAreAdminButtonsVisible(true); // Keep admin submenu open
+    setAreScansButtonsVisible(false);
   };
 
   // Handler para mostrar la tabla de historial de scans
   const handleShowScansTable = () => {
     setShowScansTable(true);
     setShowUsersTable(false);
+    setAreAdminButtonsVisible(false);
+    setAreScansButtonsVisible(true); // Keep scans submenu open
   };
 
   // Handler para ir al Dashboard (oculta ambas tablas)
   const handleDashboard = () => {
     setShowUsersTable(false);
     setShowScansTable(false);
+    setAreAdminButtonsVisible(false);
+    setAreScansButtonsVisible(false);
   };
 
   // Handler para mostrar el modal/drawer de Enter URLs
   const handleEnterUrlsClick = () => {
     setIsEnterUrlsModalOpen(true);
   };
+
+  // State for sidebar submenus visibility, controlled from page
+  const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
+  const [areScansButtonsVisible, setAreScansButtonsVisible] = useState(false);
 
   if (!isAuthenticated) {
     // Optional: Add a more sophisticated loading state or skeleton screen
@@ -166,6 +180,12 @@ const HomePage = () => {
               ? 'scans'
               : 'dashboard'
           }
+          // Pass state and handlers for submenus
+          areAdminButtonsVisible={areAdminButtonsVisible}
+          setAreAdminButtonsVisible={setAreAdminButtonsVisible}
+          areScansButtonsVisible={areScansButtonsVisible}
+          setAreScansButtonsVisible={setAreScansButtonsVisible}
+          onDashboardClick={handleDashboard}
         />
         <main className="flex-1 p-6 bg-background/80 backdrop-blur-sm overflow-y-auto">
           {/* Conditional rendering based on state */}
@@ -212,3 +232,5 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
+    

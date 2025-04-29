@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus, FlaskConical, Globe } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus, FlaskConical, Globe, Settings } from 'lucide-react'; // Added Settings icon
 
 export interface SidebarProps {
   email: string;
@@ -10,9 +10,15 @@ export interface SidebarProps {
   onCreateUserClick: () => void;
   onRolesClick: () => void;
   onShowUsersTable?: () => void;
-  onShowScansTable?: () => void; // Nuevo callback para mostrar la tabla de scans
-  onTestUrlClick?: () => void; // Callback para Enter URLs (mantén el nombre para compatibilidad)
+  onShowScansTable?: () => void;
+  onTestUrlClick?: () => void;
   activeRoute?: string;
+  // New props to control submenu visibility from parent
+  areAdminButtonsVisible: boolean;
+  setAreAdminButtonsVisible: (visible: boolean) => void;
+  areScansButtonsVisible: boolean;
+  setAreScansButtonsVisible: (visible: boolean) => void;
+  onDashboardClick: () => void; // New handler for dashboard click
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -25,28 +31,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onShowScansTable,
   onTestUrlClick,
   activeRoute,
+  // Destructure new props
+  areAdminButtonsVisible,
+  setAreAdminButtonsVisible,
+  areScansButtonsVisible,
+  setAreScansButtonsVisible,
+  onDashboardClick,
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
-  const [areScansButtonsVisible, setAreScansButtonsVisible] = useState(false);
+  // Removed local state for submenu visibility, now controlled by parent
+  // const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
+  // const [areScansButtonsVisible, setAreScansButtonsVisible] = useState(false);
   const router = useRouter();
   const canSeeAdminButtons = userRoles.includes('superadmin') || userRoles.includes('contributor');
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+
+  // Use the passed handler for dashboard click
   const handleDashboardClick = () => {
     setAreAdminButtonsVisible(false);
     setAreScansButtonsVisible(false);
-    router.push('/');
+    onDashboardClick(); // Call the handler passed from parent
   };
+
   const handleUserManagementClick = () => {
-    setAreAdminButtonsVisible((v) => !v);
+    setAreAdminButtonsVisible((v) => !v); // Toggle visibility via parent state setter
     setAreScansButtonsVisible(false);
     if (onShowUsersTable) onShowUsersTable();
   };
+
   const handleScansClick = () => {
-    setAreScansButtonsVisible((v) => !v);
+    setAreScansButtonsVisible((v) => !v); // Toggle visibility via parent state setter
     setAreAdminButtonsVisible(false);
     if (onShowScansTable) onShowScansTable(); // Llama al handler para mostrar la tabla de scans
   };
+
+  // Close submenus if sidebar collapses
+  useEffect(() => {
+    if (!isSidebarOpen) {
+      setAreAdminButtonsVisible(false);
+      setAreScansButtonsVisible(false);
+    }
+  }, [isSidebarOpen, setAreAdminButtonsVisible, setAreScansButtonsVisible]);
+
+
   return (
     <aside
       className={`sidebar transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-20'} p-4 flex flex-col justify-between items-center`}
@@ -54,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Botón para expandir/colapsar */}
       <Button
         variant="ghost"
-        className="absolute right-0 top-1/2 z-20 p-1 rounded-full bg-black/40 text-white hover:bg-[#017979] transform -translate-y-1/2"
+        className="absolute right-0 top-1/2 z-20 p-1 rounded-full bg-black/40 text-white hover:bg-[#017979] transform -translate-y-1/2 translate-x-1/2" // Adjust position slightly
         onClick={toggleSidebar}
         aria-label={isSidebarOpen ? 'Colapsar sidebar' : 'Expandir sidebar'}
       >
@@ -62,111 +89,111 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </Button>
       {/* Email del usuario */}
       <div className="flex flex-col items-center w-full mt-10">
-        <div className="flex gap-2 items-center mb-8">
-          {isSidebarOpen && (
+        <div className="flex gap-2 items-center mb-8 w-full justify-center">
+          {isSidebarOpen ? (
             <span
-              className="px-4 py-2 rounded-full font-semibold text-white bg-[#017979] shadow-lg border border-white heartbeat"
+              className="px-4 py-2 rounded-full font-semibold text-white bg-[#017979]/80 shadow-lg border border-primary/30 heartbeat max-w-full truncate"
               style={{ boxShadow: '0 0 0 0 #017979' }}
+              title={email || 'No email'}
             >
               {email || 'No email'}
             </span>
+          ) : (
+             <div className="h-8 w-8 rounded-full bg-[#017979]/80 flex items-center justify-center text-white font-bold shadow-lg border border-primary/30 heartbeat">
+               {email ? email[0].toUpperCase() : '?'}
+             </div>
           )}
         </div>
         {/* Navegación principal */}
-        <nav className="space-y-4 flex flex-col items-center w-full">
+        <nav className="space-y-2 flex flex-col items-center w-full">
           {/* Dashboard */}
           <Button
             variant="ghost"
-            className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/40 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'dashboard' ? 'active' : ''}`}
+            className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/40 hover:bg-[#017979] text-white p-2 rounded-md ${activeRoute === 'dashboard' ? 'active' : ''}`}
             title="Dashboard"
             onClick={handleDashboardClick}
           >
-            <Home className="h-5 w-5 flex-shrink-0 text-white" />
+            <Home className="h-5 w-5 flex-shrink-0" />
             {isSidebarOpen && (
-              <span className="transition-all duration-300 ease-in-out overflow-hidden text-white">Dashboard</span>
+              <span className="transition-opacity duration-300 ease-in-out overflow-hidden">Dashboard</span>
             )}
           </Button>
           {/* Botón de administración (visible según roles) */}
           {canSeeAdminButtons && (
             <Button
               variant="ghost"
-              className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'user-management' ? 'active' : ''}`}
-              title="Administrator User"
+              className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 hover:bg-[#017979] text-white p-2 rounded-md ${activeRoute === 'user-management' ? 'active' : ''}`}
+              title="User Management"
               onClick={handleUserManagementClick}
               aria-expanded={areAdminButtonsVisible}
               aria-controls="sidebar-admin-buttons"
             >
-              <Users className="h-5 w-5 flex-shrink-0 text-white" />
+              <Users className="h-5 w-5 flex-shrink-0" />
               {isSidebarOpen && (
-                <span className="transition-all duration-300 ease-in-out overflow-hidden">
-                  user management
+                <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+                  User Management
                 </span>
               )}
             </Button>
           )}
           {/* Submenú de administración */}
-          {areAdminButtonsVisible && canSeeAdminButtons && (
-            <div className="flex flex-col items-center w-full" id="sidebar-admin-buttons">
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'create-user' ? 'active' : ''}`}
-                title="Create User"
-                onClick={onCreateUserClick}
-              >
-                <UserPlus className="h-5 w-5 flex-shrink-0 text-white" />
-                {isSidebarOpen && (
-                  <span className="transition-all duration-300 ease-in-out overflow-hidden">
-                    Create User
-                  </span>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'roles' ? 'active' : ''}`}
-                title="Roles"
-                onClick={onRolesClick}
-              >
-                <Users className="h-5 w-5 flex-shrink-0 text-white" />
-                {isSidebarOpen && (
-                  <span className="transition-all duration-300 ease-in-out overflow-hidden">
-                   Roles
-                  </span>
-                )}
-              </Button>
-            </div>
-          )}
+          {isSidebarOpen && areAdminButtonsVisible && canSeeAdminButtons && (
+             <div className="pl-6 w-full space-y-1" id="sidebar-admin-buttons">
+               <Button
+                 variant="ghost"
+                 className={`w-full justify-start text-xs gap-2 bg-black/30 hover:bg-[#017979]/70 text-white p-2 rounded-md ${activeRoute === 'create-user' ? 'active-sub' : ''}`}
+                 title="Create User"
+                 onClick={onCreateUserClick}
+               >
+                 <UserPlus className="h-4 w-4 flex-shrink-0" />
+                 <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+                   Create User
+                 </span>
+               </Button>
+               <Button
+                 variant="ghost"
+                 className={`w-full justify-start text-xs gap-2 bg-black/30 hover:bg-[#017979]/70 text-white p-2 rounded-md ${activeRoute === 'roles' ? 'active-sub' : ''}`}
+                 title="Roles Management"
+                 onClick={onRolesClick}
+               >
+                 <Settings className="h-4 w-4 flex-shrink-0" /> {/* Changed icon */}
+                 <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+                   Roles Management
+                 </span>
+               </Button>
+             </div>
+           )}
           {/* Botón SCANS */}
           <Button
             variant="ghost"
-            className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'scans' ? 'active' : ''}`}
+            className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 hover:bg-[#017979] text-white p-2 rounded-md ${activeRoute === 'scans' ? 'active' : ''}`}
             title="Scans"
             onClick={handleScansClick}
             aria-expanded={areScansButtonsVisible}
             aria-controls="sidebar-scans-buttons"
           >
-            <FlaskConical className="h-5 w-5 flex-shrink-0 text-white" />
+            <FlaskConical className="h-5 w-5 flex-shrink-0" />
             {isSidebarOpen && (
-              <span className="transition-all duration-300 ease-in-out overflow-hidden">
+              <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
                 Scans
               </span>
             )}
           </Button>
           {/* Submenú de SCANS */}
-          {areScansButtonsVisible && (
-            <div className="flex flex-col items-center w-full" id="sidebar-scans-buttons">
+          {isSidebarOpen && areScansButtonsVisible && (
+            <div className="pl-6 w-full space-y-1" id="sidebar-scans-buttons">
               <Button
                 variant="ghost"
-                className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`}
+                className={`w-full justify-start text-xs gap-2 bg-black/30 hover:bg-[#017979]/70 text-white p-2 rounded-md ${activeRoute === 'enter-urls' ? 'active-sub' : ''}`}
                 title="Enter URLs"
                 onClick={onTestUrlClick}
               >
-                <Globe className="h-5 w-5 flex-shrink-0 text-white" />
-                {isSidebarOpen && (
-                  <span className="transition-all duration-300 ease-in-out overflow-hidden">
-                    Enter URLs
-                  </span>
-                )}
+                <Globe className="h-4 w-4 flex-shrink-0" />
+                <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+                  Enter URLs
+                </span>
               </Button>
+               {/* Add other scan sub-options here if needed */}
             </div>
           )}
         </nav>
@@ -179,9 +206,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onLogout}
           title="Logout"
         >
-          <LogOut className="h-5 w-5 flex-shrink-0 text-white" />
+          <LogOut className="h-5 w-5 flex-shrink-0" />
           {isSidebarOpen && (
-            <span className="transition-all duration-300 ease-in-out overflow-hidden">
+            <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
               Logout
             </span>
           )}
@@ -190,3 +217,5 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </aside>
   );
 };
+
+    
