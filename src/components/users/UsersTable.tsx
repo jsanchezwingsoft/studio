@@ -13,6 +13,7 @@ import { Eye, KeyRound, Pencil, Trash2 } from 'lucide-react';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import { EditUserModal } from './EditUserModal';
 import { DeleteUserModal } from './DeleteUserModal';
+import { UserDetailModal } from './UserDetailModal'; // <--- NUEVO IMPORT
 
 interface User {
   user_id: string;
@@ -38,6 +39,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
   const [resetUser, setResetUser] = useState<{ user_id: string; username: string } | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [viewUserId, setViewUserId] = useState<string | null>(null); // <--- NUEVO ESTADO
 
   const fetchUsers = async (isInitial = false) => {
     try {
@@ -121,7 +123,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                         size="icon"
                         variant="ghost"
                         title="Ver usuario"
-                        onClick={() => onViewUser && onViewUser(user)}
+                        onClick={() => setViewUserId(user.user_id)} // <--- NUEVO
                       >
                         <Eye className="w-5 h-5 text-blue-600" />
                       </Button>
@@ -180,6 +182,14 @@ export const UsersTable: React.FC<UsersTableProps> = ({
               onClose={() => setDeleteUser(null)}
               user={deleteUser}
               onDeleted={handleUserUpdatedOrDeleted}
+            />
+          )}
+          {/* Modal de ver usuario */}
+          {viewUserId && (
+            <UserDetailModal
+              open={!!viewUserId}
+              onClose={() => setViewUserId(null)}
+              userId={viewUserId}
             />
           )}
         </>
