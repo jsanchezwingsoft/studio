@@ -8,8 +8,9 @@ import { RolesManager } from '@/components/users/RolesManager';
 import { UsersTable } from '@/components/users/UsersTable';
 import { Dialog } from '@/components/ui/dialog';
 import { VideoBackground } from '@/components/background/video-background';
+
 import { useToast } from '@/hooks/use-toast';
-import { ScansHistoryTable } from '@/components/scans/ScansHistoryTable'; // Nuevo import
+import { ScansHistoryTable } from '@/components/scans/ScansHistoryTable';
 
 const HomePage = () => {
   const [isAuthenticatedState, setIsAuthenticatedState] = useState<boolean>(false);
@@ -18,7 +19,7 @@ const HomePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
   const [showUsersTable, setShowUsersTable] = useState(false);
-  const [showScansTable, setShowScansTable] = useState(false); // Nuevo estado
+  const [showScansTable, setShowScansTable] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const isAuthenticated = isAuthenticatedState;
@@ -111,7 +112,7 @@ const HomePage = () => {
           onCreateUserClick={() => setIsModalOpen(true)}
           onRolesClick={() => setIsRolesModalOpen(true)}
           onShowUsersTable={handleShowUsersTable}
-          onShowScansTable={handleShowScansTable} // Nuevo prop
+          onShowScansTable={handleShowScansTable}          
           activeRoute={
             showUsersTable
               ? 'user-management'
