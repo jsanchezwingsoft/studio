@@ -5,10 +5,11 @@ import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { CreateUserForm } from '@/components/users/CreateUserForm';
 import { RolesManager } from '@/components/users/RolesManager';
-import { UsersTable } from '@/components/users/UsersTable'; // Nuevo componente
+import { UsersTable } from '@/components/users/UsersTable';
 import { Dialog } from '@/components/ui/dialog';
 import { VideoBackground } from '@/components/background/video-background';
 import { useToast } from '@/hooks/use-toast';
+import { ScansHistoryTable } from '@/components/scans/ScansHistoryTable'; // Nuevo import
 
 const HomePage = () => {
   const [isAuthenticatedState, setIsAuthenticatedState] = useState<boolean>(false);
@@ -16,7 +17,8 @@ const HomePage = () => {
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
-  const [showUsersTable, setShowUsersTable] = useState(false); // Nuevo estado
+  const [showUsersTable, setShowUsersTable] = useState(false);
+  const [showScansTable, setShowScansTable] = useState(false); // Nuevo estado
   const { toast } = useToast();
   const router = useRouter();
   const isAuthenticated = isAuthenticatedState;
@@ -75,11 +77,19 @@ const HomePage = () => {
   // Handler para mostrar la tabla de usuarios
   const handleShowUsersTable = () => {
     setShowUsersTable(true);
+    setShowScansTable(false);
   };
 
-  // Opcional: Si quieres ocultar la tabla al ir a Dashboard, puedes hacer:
+  // Handler para mostrar la tabla de historial de scans
+  const handleShowScansTable = () => {
+    setShowScansTable(true);
+    setShowUsersTable(false);
+  };
+
+  // Handler para ir al Dashboard (oculta ambas tablas)
   const handleDashboard = () => {
     setShowUsersTable(false);
+    setShowScansTable(false);
   };
 
   if (!isAuthenticated) {
@@ -100,8 +110,15 @@ const HomePage = () => {
           onLogout={handleLogout}
           onCreateUserClick={() => setIsModalOpen(true)}
           onRolesClick={() => setIsRolesModalOpen(true)}
-          onShowUsersTable={handleShowUsersTable} // Nuevo prop
-          activeRoute={showUsersTable ? 'user-management' : 'dashboard'}
+          onShowUsersTable={handleShowUsersTable}
+          onShowScansTable={handleShowScansTable} // Nuevo prop
+          activeRoute={
+            showUsersTable
+              ? 'user-management'
+              : showScansTable
+              ? 'scans'
+              : 'dashboard'
+          }
         />
         <main className="flex-1 p-6 bg-background/80 backdrop-blur-sm overflow-y-auto">
           <h1 className="text-2xl font-bold mb-4 text-foreground">Welcome to MiniHack Analyzer</h1>
@@ -110,6 +127,9 @@ const HomePage = () => {
             <div className="mt-8">
               <UsersTable />
             </div>
+          )}
+          {showScansTable && (
+            <ScansHistoryTable />
           )}
         </main>
         {/* Modal para crear usuario */}

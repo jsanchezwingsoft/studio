@@ -1,36 +1,20 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus, FlaskConical, Globe } from 'lucide-react';
 
-/**
- * SidebarProps
- * @param email Email del usuario autenticado (se muestra en la parte superior)
- * @param userRoles Array de roles del usuario autenticado (para mostrar/ocultar opciones de administración)
- * @param onLogout Callback para ejecutar al hacer logout
- * @param onCreateUserClick Callback para abrir el modal de crear usuario
- * @param onRolesClick Callback para abrir el modal de gestión de roles
- * @param onShowUsersTable Callback para mostrar la tabla de usuarios en el homepage (NUEVO)
- * @param activeRoute (opcional) Ruta activa para resaltar el menú correspondiente
- */
 export interface SidebarProps {
   email: string;
   userRoles: string[];
   onLogout: () => void;
   onCreateUserClick: () => void;
   onRolesClick: () => void;
-  onShowUsersTable?: () => void; // Nuevo prop
+  onShowUsersTable?: () => void;
+  onShowScansTable?: () => void; // Nuevo callback para mostrar la tabla de scans
+  onTestUrlClick?: () => void; // Callback para Enter URLs (mantén el nombre para compatibilidad)
   activeRoute?: string;
 }
 
-/**
- * Sidebar - Componente de barra lateral reutilizable y autocontenida.
- * 
- * - Muestra el email del usuario.
- * - Permite expandir/colapsar.
- * - Muestra opciones de administración según roles.
- * - Expone callbacks para acciones (logout, crear usuario, roles, mostrar tabla usuarios).
- */
 export const Sidebar: React.FC<SidebarProps> = ({
   email,
   userRoles,
@@ -38,28 +22,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCreateUserClick,
   onRolesClick,
   onShowUsersTable,
+  onShowScansTable,
+  onTestUrlClick,
   activeRoute,
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
+  const [areScansButtonsVisible, setAreScansButtonsVisible] = useState(false);
   const router = useRouter();
-
-  // Permiso para ver botones de administración
   const canSeeAdminButtons = userRoles.includes('superadmin') || userRoles.includes('contributor');
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-
-  // Handler para Dashboard: navega y cierra submenús
   const handleDashboardClick = () => {
     setAreAdminButtonsVisible(false);
+    setAreScansButtonsVisible(false);
     router.push('/');
   };
-
-  // Handler para User Management: muestra submenú y la tabla de usuarios
   const handleUserManagementClick = () => {
     setAreAdminButtonsVisible((v) => !v);
+    setAreScansButtonsVisible(false);
     if (onShowUsersTable) onShowUsersTable();
   };
-
+  const handleScansClick = () => {
+    setAreScansButtonsVisible((v) => !v);
+    setAreAdminButtonsVisible(false);
+    if (onShowScansTable) onShowScansTable(); // Llama al handler para mostrar la tabla de scans
+  };
   return (
     <aside
       className={`sidebar transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-20'} p-4 flex flex-col justify-between items-center`}
@@ -148,31 +135,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </Button>
             </div>
           )}
-          {/* Otros botones visibles para todos */}
+          {/* Botón SCANS */}
           <Button
             variant="ghost"
-            className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'button1' ? 'active' : ''}`}
-            title="Button 1"
+            className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'scans' ? 'active' : ''}`}
+            title="Scans"
+            onClick={handleScansClick}
+            aria-expanded={areScansButtonsVisible}
+            aria-controls="sidebar-scans-buttons"
           >
-            <Mail className="h-5 w-5 flex-shrink-0 text-white" />
+            <FlaskConical className="h-5 w-5 flex-shrink-0 text-white" />
             {isSidebarOpen && (
               <span className="transition-all duration-300 ease-in-out overflow-hidden">
-                Button 1
+                Scans
               </span>
             )}
           </Button>
-          <Button
-            variant="ghost"
-            className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979] ${activeRoute === 'button2' ? 'active' : ''}`}
-            title="Button 2"
-          >
-            <Mail className="h-5 w-5 flex-shrink-0 text-white" />
-            {isSidebarOpen && (
-              <span className="transition-all duration-300 ease-in-out overflow-hidden">
-                Button 2
-              </span>
-            )}
-          </Button>
+          {/* Submenú de SCANS */}
+          {areScansButtonsVisible && (
+            <div className="flex flex-col items-center w-full" id="sidebar-scans-buttons">
+              <Button
+                variant="ghost"
+                className={`w-full justify-start text-sm ${isSidebarOpen ? 'gap-2' : 'justify-center'} bg-black/60 group-hover:bg-transparent text-white p-2 rounded-md hover:bg-[#017979]`}
+                title="Enter URLs"
+                onClick={onTestUrlClick}
+              >
+                <Globe className="h-5 w-5 flex-shrink-0 text-white" />
+                {isSidebarOpen && (
+                  <span className="transition-all duration-300 ease-in-out overflow-hidden">
+                    Enter URLs
+                  </span>
+                )}
+              </Button>
+            </div>
+          )}
         </nav>
       </div>
       {/* Botón de logout */}
