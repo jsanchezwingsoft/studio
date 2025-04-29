@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import EnterUrlsScan from '@/components/scans/EnterUrlsScan'; // Changed to default import
+import EnterUrlsScan from '@/components/scans/EnterUrlsScan';
 import { useRouter } from 'next/navigation';
 import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Sidebar } from '@/components/sidebar/sidebar';
@@ -20,6 +20,9 @@ const HomePage = () => {
   const [showUsersTable, setShowUsersTable] = useState(false);
   const [showScansTable, setShowScansTable] = useState(false);
   const [isEnterUrlsModalOpen, setIsEnterUrlsModalOpen] = useState(false);
+  const [refreshScansTable, setRefreshScansTable] = useState(false);
+  const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
+  const [areScansButtonsVisible, setAreScansButtonsVisible] = useState(false);
   const { toast } = useToast();
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const router = useRouter();
@@ -48,7 +51,6 @@ const HomePage = () => {
             body: JSON.stringify({ refresh_token: refreshToken }),
           }
         );
-        // Check if response is an object and not Response to handle fetchWrapper error case
         if (response && typeof response === 'object' && 'error' in response) {
           console.warn('Logout API call might have failed, but proceeding with frontend logout:', response.error);
         } else if (response && response.ok) {
@@ -58,11 +60,9 @@ const HomePage = () => {
         }
       } catch (error) {
          console.error('Error during logout API call:', error);
-        // No-op, ya redirigimos arriba
       }
     }
   };
-
 
   // Autenticación y roles
   useEffect(() => {
@@ -70,58 +70,28 @@ const HomePage = () => {
       const token = sessionStorage.getItem('accessToken');
       const storedEmail = sessionStorage.getItem('email');
       const storedRoles = sessionStorage.getItem('roles');
-
       if (token) {
-          // Verify token validity with the backend (optional but recommended)
           try {
-              const response = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/verify-token'); // Replace with your actual verify endpoint
-
-              // Check if response is an object and has an error property
-              if (response && typeof response === 'object' && 'error' in response) {
-                 if (response.error === 'not_authenticated') {
-                    console.log('Token invalid or expired, redirecting to login.');
-                    handleLogout(); // Ensure clean logout if token is bad
-                    return;
-                 } else if (response.error === 'not_found') {
-                    console.warn('Token verification endpoint not found (404). Assuming invalid token and logging out.');
-                    handleLogout(); // Ensure clean logout if endpoint is missing
-                    return;
-                 } else {
-                    throw new Error(`Authentication check failed: ${response.error}`);
-                 }
-              } else if (!response || !response.ok) {
-                 // Handle cases where response is not ok but not the specific 'error' object
-                 const status = response ? response.status : 'unknown';
-                 console.log(`Token verification failed with status ${status}, redirecting to login.`);
-                 handleLogout(); // Ensure clean logout
-                 return;
-              }
-
-              // If token is valid
               setIsAuthenticatedState(true);
               setEmail(storedEmail || '');
               if (storedRoles) {
                   setUserRoles(JSON.parse(storedRoles));
               }
           } catch (error) {
-              console.error("Error during token verification:", error);
-              handleLogout(); // Logout on any verification error
+              handleLogout();
           }
       } else {
-          console.log('No access token found, redirecting to login.');
-          handleLogout(); // Ensure clean logout if no token
+          handleLogout();
       }
-  };
-
+    };
     checkAuth();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]); // Dependencies for useEffect
+  }, [router]);
 
   // Handler para mostrar la tabla de usuarios
   const handleShowUsersTable = () => {
     setShowUsersTable(true);
     setShowScansTable(false);
-    setAreAdminButtonsVisible(true); // Keep admin submenu open
+    setAreAdminButtonsVisible(true);
     setAreScansButtonsVisible(false);
   };
 
@@ -130,7 +100,7 @@ const HomePage = () => {
     setShowScansTable(true);
     setShowUsersTable(false);
     setAreAdminButtonsVisible(false);
-    setAreScansButtonsVisible(true); // Keep scans submenu open
+    setAreScansButtonsVisible(true);
   };
 
   // Handler para ir al Dashboard (oculta ambas tablas)
@@ -141,21 +111,20 @@ const HomePage = () => {
     setAreScansButtonsVisible(false);
   };
 
-  // Handler para mostrar el modal/drawer de Enter URLs
+  // Handler para mostrar el modal de Enter URLs
   const handleEnterUrlsClick = () => {
     setIsEnterUrlsModalOpen(true);
   };
 
-  // State for sidebar submenus visibility, controlled from page
-  const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
-  const [areScansButtonsVisible, setAreScansButtonsVisible] = useState(false);
+  // Handler para refrescar la tabla de historial tras escanear
+  const handleScanSuccess = () => {
+    setRefreshScansTable((prev) => !prev);
+  };
 
   if (!isAuthenticated) {
-    // Optional: Add a more sophisticated loading state or skeleton screen
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-foreground z-10">Loading authentication...</p>
-         {/* Consider adding a spinner or skeleton UI */}
       </div>
     );
   }
@@ -180,7 +149,6 @@ const HomePage = () => {
               ? 'scans'
               : 'dashboard'
           }
-          // Pass state and handlers for submenus
           areAdminButtonsVisible={areAdminButtonsVisible}
           setAreAdminButtonsVisible={setAreAdminButtonsVisible}
           areScansButtonsVisible={areScansButtonsVisible}
@@ -188,28 +156,23 @@ const HomePage = () => {
           onDashboardClick={handleDashboard}
         />
         <main className="flex-1 p-6 bg-background/80 backdrop-blur-sm overflow-y-auto">
-          {/* Conditional rendering based on state */}
-           {!showUsersTable && !showScansTable && (
-             <>
-               <h1 className="text-2xl font-bold mb-4 text-foreground">Welcome to MiniHack Analyzer</h1>
-               <p className="text-muted-foreground">Your dashboard content goes here.</p>
-                {/* Add Dashboard specific components here */}
-             </>
-           )}
-           {showUsersTable && (
-             <div className="mt-8">
-               <UsersTable />
-             </div>
-           )}
-           {showScansTable && (
-             <div className="mt-8">
-                <ScansHistoryTable />
-             </div>
-           )}
+          <h1 className="text-2xl font-bold mb-4 text-foreground">Welcome to MiniHack Analyzer</h1>
+          <p className="text-muted-foreground">Your dashboard content goes here.</p>
+          {showUsersTable && (
+            <div className="mt-8">
+              <UsersTable />
+            </div>
+          )}
+          {showScansTable && (
+            <ScansHistoryTable refresh={refreshScansTable} />
+          )}
         </main>
         {/* Modal para ingresar la URL y escanear */}
         <Dialog open={isEnterUrlsModalOpen} onOpenChange={setIsEnterUrlsModalOpen}>
-          <EnterUrlsScan onClose={() => setIsEnterUrlsModalOpen(false)} />
+          <EnterUrlsScan
+            onClose={() => setIsEnterUrlsModalOpen(false)}
+            onScanSuccess={handleScanSuccess}
+          />
         </Dialog>
         {/* Modal para crear usuario */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -232,5 +195,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
-    

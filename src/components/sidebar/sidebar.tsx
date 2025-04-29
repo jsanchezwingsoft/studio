@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus, FlaskConical, Globe, Settings } from 'lucide-react'; // Added Settings icon
+import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus, FlaskConical, Globe, Settings } from 'lucide-react';
 
 export interface SidebarProps {
   email: string;
@@ -13,12 +13,11 @@ export interface SidebarProps {
   onShowScansTable?: () => void;
   onTestUrlClick?: () => void;
   activeRoute?: string;
-  // New props to control submenu visibility from parent
   areAdminButtonsVisible: boolean;
   setAreAdminButtonsVisible: (visible: boolean) => void;
   areScansButtonsVisible: boolean;
   setAreScansButtonsVisible: (visible: boolean) => void;
-  onDashboardClick: () => void; // New handler for dashboard click
+  onDashboardClick: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -31,7 +30,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onShowScansTable,
   onTestUrlClick,
   activeRoute,
-  // Destructure new props
   areAdminButtonsVisible,
   setAreAdminButtonsVisible,
   areScansButtonsVisible,
@@ -39,30 +37,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDashboardClick,
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  // Removed local state for submenu visibility, now controlled by parent
-  // const [areAdminButtonsVisible, setAreAdminButtonsVisible] = useState(false);
-  // const [areScansButtonsVisible, setAreScansButtonsVisible] = useState(false);
   const router = useRouter();
   const canSeeAdminButtons = userRoles.includes('superadmin') || userRoles.includes('contributor');
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-  // Use the passed handler for dashboard click
   const handleDashboardClick = () => {
     setAreAdminButtonsVisible(false);
     setAreScansButtonsVisible(false);
-    onDashboardClick(); // Call the handler passed from parent
+    onDashboardClick();
+    router.push('/');
   };
-
   const handleUserManagementClick = () => {
-    setAreAdminButtonsVisible((v) => !v); // Toggle visibility via parent state setter
+    setAreAdminButtonsVisible((v) => !v);
     setAreScansButtonsVisible(false);
     if (onShowUsersTable) onShowUsersTable();
   };
-
   const handleScansClick = () => {
-    setAreScansButtonsVisible((v) => !v); // Toggle visibility via parent state setter
+    setAreScansButtonsVisible((v) => !v);
     setAreAdminButtonsVisible(false);
-    if (onShowScansTable) onShowScansTable(); // Llama al handler para mostrar la tabla de scans
+    if (onShowScansTable) onShowScansTable();
   };
 
   // Close submenus if sidebar collapses
@@ -73,7 +66,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   }, [isSidebarOpen, setAreAdminButtonsVisible, setAreScansButtonsVisible]);
 
-
   return (
     <aside
       className={`sidebar transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-20'} p-4 flex flex-col justify-between items-center`}
@@ -81,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Botón para expandir/colapsar */}
       <Button
         variant="ghost"
-        className="absolute right-0 top-1/2 z-20 p-1 rounded-full bg-black/40 text-white hover:bg-[#017979] transform -translate-y-1/2 translate-x-1/2" // Adjust position slightly
+        className="absolute right-0 top-1/2 z-20 p-1 rounded-full bg-black/40 text-white hover:bg-[#017979] transform -translate-y-1/2 translate-x-1/2"
         onClick={toggleSidebar}
         aria-label={isSidebarOpen ? 'Colapsar sidebar' : 'Expandir sidebar'}
       >
@@ -130,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <Users className="h-5 w-5 flex-shrink-0" />
               {isSidebarOpen && (
-                <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+                <span className="transition-all duration-300 ease-in-out overflow-hidden">
                   User Management
                 </span>
               )}
@@ -146,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                  onClick={onCreateUserClick}
                >
                  <UserPlus className="h-4 w-4 flex-shrink-0" />
-                 <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+                 <span className="transition-all duration-300 ease-in-out overflow-hidden">
                    Create User
                  </span>
                </Button>
@@ -156,8 +148,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                  title="Roles Management"
                  onClick={onRolesClick}
                >
-                 <Settings className="h-4 w-4 flex-shrink-0" /> {/* Changed icon */}
-                 <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+                 <Settings className="h-4 w-4 flex-shrink-0" />
+                 <span className="transition-all duration-300 ease-in-out overflow-hidden">
                    Roles Management
                  </span>
                </Button>
@@ -174,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <FlaskConical className="h-5 w-5 flex-shrink-0" />
             {isSidebarOpen && (
-              <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+              <span className="transition-all duration-300 ease-in-out overflow-hidden">
                 Scans
               </span>
             )}
@@ -189,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={onTestUrlClick}
               >
                 <Globe className="h-4 w-4 flex-shrink-0" />
-                <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+                <span className="transition-all duration-300 ease-in-out overflow-hidden">
                   Enter URLs
                 </span>
               </Button>
@@ -208,7 +200,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
           {isSidebarOpen && (
-            <span className="transition-opacity duration-300 ease-in-out overflow-hidden">
+            <span className="transition-all duration-300 ease-in-out overflow-hidden">
               Logout
             </span>
           )}
@@ -217,5 +209,3 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </aside>
   );
 };
-
-    
