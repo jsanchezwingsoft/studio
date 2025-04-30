@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ScanResultModal } from './ScanResultModal';
 import { fetchWrapper } from '@/utils/fetchWrapper';
@@ -15,7 +15,6 @@ interface UserUrl {
   created_at: string;
 }
 
-// Cambia el tamaño de página a 5
 const PAGE_SIZE = 5;
 
 export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) => {
@@ -158,16 +157,18 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
           <Button
             size="icon"
             variant="ghost"
-            title="Ver detalles"
+            title="SSL/TLS"
+            aria-label="SSL/TLS"
             onClick={() => setViewUrlId(row.url_id)}
             className="hover:text-primary"
           >
-            <Eye className="w-5 h-5 text-blue-600" />
+            <ShieldCheck className="w-5 h-5 text-green-600" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
             title="Eliminar URL"
+            aria-label="Eliminar URL"
             onClick={() => handleDeleteUrl(row.url_id)}
             className="hover:text-destructive"
           >
