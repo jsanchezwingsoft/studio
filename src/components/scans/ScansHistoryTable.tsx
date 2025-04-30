@@ -10,6 +10,14 @@ import { HttpResultModal } from './HttpResultModal';
 import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Input } from '@/components/ui/input';
 import { GenericTable, GenericTableColumn } from '@/components/ui/GenericTable';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 
 interface UserUrl {
   url_id: string;
@@ -25,7 +33,8 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [viewUrlId, setViewUrlId] = useState<string | null>(null);
   const [viewDnsUrlId, setViewDnsUrlId] = useState<string | null>(null);
-  const [viewHttpUrlId, setViewHttpUrlId] = useState<string | null>(null); // Nuevo estado para HTTP modal
+  const [viewHttpUrlId, setViewHttpUrlId] = useState<string | null>(null);
+  const [deleteUrlId, setDeleteUrlId] = useState<string | null>(null); // Estado para modal de confirmación
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const { toast } = useToast();
@@ -81,12 +90,12 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refresh]);
 
-  const handleDeleteUrl = async (url_id: string) => {
-    if (!window.confirm('¿Estás seguro que deseas eliminar esta URL y sus análisis asociados?')) return;
+  const handleDeleteUrl = async () => {
+    if (!deleteUrlId) return;
     try {
       setRefreshing(true);
       const response = await fetchWrapper(
-        `https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/user-urls/${url_id}`,
+        `https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/user-urls/${deleteUrlId}`,
         {
           method: 'DELETE',
           headers: {
@@ -106,6 +115,7 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
         title: 'URL eliminada',
         description: 'La URL fue eliminada correctamente.',
       });
+      setDeleteUrlId(null);
       fetchUrls(false);
     } catch (err: any) {
       toast({
@@ -141,7 +151,6 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
     }
   }, [totalPages, currentPage, filteredUrls.length]);
 
-  // Columnas para la tabla de historial de URLs
   const columns: GenericTableColumn<UserUrl>[] = [
     {
       key: 'url',
@@ -186,14 +195,14 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
             onClick={() => setViewHttpUrlId(row.url_id)}
             className="hover:text-primary"
           >
-            <Lock className="w-5 h-5 text-orange-600" />
+            <Lock className="w-5 h-5 text-purple-600" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
             title="Eliminar URL"
             aria-label="Eliminar URL"
-            onClick={() => handleDeleteUrl(row.url_id)}
+            onClick={() => setDeleteUrlId(row.url_id)}
             className="hover:text-destructive"
           >
             <Trash2 className="w-5 h-5 text-red-600" />
@@ -284,6 +293,31 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
           onClose={() => setViewHttpUrlId(null)}
         />
       )}
+      {/* Modal de confirmación de eliminación */}
+      <Dialog open={!!deleteUrlId} onOpenChange={() => setDeleteUrlId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar URL?</DialogTitle>
+          </DialogHeader>
+          <div className="mb-4">
+            ¿Estás seguro que deseas eliminar esta URL y sus análisis asociados?
+          </div>
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteUrl}
+              disabled={refreshing}
+            >
+              Eliminar
+            </Button>
+            <DialogClose asChild>
+              <Button variant="secondary" disabled={refreshing}>
+                Cancelar
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

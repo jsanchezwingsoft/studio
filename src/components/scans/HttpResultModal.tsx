@@ -26,37 +26,17 @@ const badge = (text: string, color: string, tooltip?: string) => (
   </span>
 );
 
-const securityHeaderTooltips: Record<string, string> = {
-  "Strict-Transport-Security": "Protege contra ataques de downgrade y secuestro de cookies forzando HTTPS.",
-  "Content-Security-Policy": "Previene ataques XSS y de inyección restringiendo fuentes de contenido.",
-  "X-Frame-Options": "Previene ataques de clickjacking.",
-  "X-Content-Type-Options": "Previene ataques de MIME sniffing.",
-  "Referrer-Policy": "Controla la información de referencia enviada.",
-  "Permissions-Policy": "Restringe el acceso a APIs y funcionalidades del navegador.",
-  "X-XSS-Protection": "Filtro XSS legacy (no recomendado en navegadores modernos)."
-};
-
-const cookieBadgeTooltip = {
-  "Sesión de usuario": "Cookie utilizada para mantener la sesión del usuario.",
-  "Google Analytics / Tracking": "Cookie utilizada para tracking de Google Analytics.",
-  "Facebook / Tracking": "Cookie utilizada para tracking de Facebook.",
-  "Insegura (sin Secure)": "Cookie enviada también por HTTP, no solo HTTPS.",
-  "Accesible por JS (sin HttpOnly)": "Cookie accesible desde JavaScript, potencialmente vulnerable.",
-  "SameSite=None sin Secure (vulnerable)": "Cookie con SameSite=None pero sin Secure, potencialmente vulnerable."
-};
-
-const crawlRuleBadgeTooltip = {
-  "Bloqueo de área sensible": "El robots.txt bloquea rutas potencialmente sensibles.",
-  "Bloqueo de recursos estáticos": "El robots.txt bloquea recursos estáticos.",
-  "Bloqueo general de todo el sitio": "El robots.txt bloquea todo el sitio a los bots.",
-  "Configuración detallada de reglas de rastreo": "El robots.txt tiene muchas reglas específicas.",
-  "Configuración básica de reglas de rastreo": "El robots.txt tiene algunas reglas básicas.",
-  "No se especifican reglas de rastreo": "No hay reglas de rastreo en el robots.txt.",
-  "Conflicto detectado": "Hay conflicto entre Allow y Disallow.",
-  "Sitemaps proporcionados para mejorar el rastreo": "El robots.txt declara sitemaps.",
-  "No se proporcionan sitemaps en robots.txt": "No hay sitemaps declarados.",
-  "Reglas específicas para user-agents": "El robots.txt tiene reglas para bots específicos.",
-  "Posible leak de información": "El robots.txt menciona rutas sensibles."
+const securityGradeBadge = (grade: string) => {
+  if (!grade) return null;
+  let color = "bg-gray-200 text-gray-800";
+  if (grade === "A+" || grade === "A") color = "bg-green-200 text-green-800";
+  else if (grade === "B+" || grade === "B") color = "bg-yellow-200 text-yellow-800";
+  else color = "bg-red-200 text-red-800";
+  return (
+    <span className={`inline-block px-2 py-1 rounded text-xs font-bold ml-2 ${color}`} title="Clasificación de seguridad HTTP">
+      {grade}
+    </span>
+  );
 };
 
 export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, onClose }) => {
@@ -88,6 +68,8 @@ export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, o
         .finally(() => setLoading(false));
     }
   }, [open, urlId]);
+
+  // ... (helpers renderList, renderCookies, renderBadges igual que antes) ...
 
   const renderList = (items: any[], badgeIfEmpty?: boolean) =>
     items && items.length > 0 ? (
@@ -132,7 +114,7 @@ export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, o
               <td className="p-1 border">
                 {(c.casos_de_uso || []).map((uc: string, i: number) =>
                   <span key={i} className="mr-1">
-                    {badge(uc, 'bg-blue-100 text-blue-800', cookieBadgeTooltip[uc] || uc)}
+                    {badge(uc, 'bg-blue-100 text-blue-800')}
                   </span>
                 )}
               </td>
@@ -165,6 +147,7 @@ export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, o
             <span className="flex items-center gap-2">
               <Lock className="w-6 h-6 text-[#017979]" />
               Detalle del análisis HTTP de la URL
+              {httpResult?.["Clasificación"] && securityGradeBadge(httpResult["Clasificación"])}
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -186,8 +169,8 @@ export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, o
                     <div key={key}>
                       <span className="font-semibold">{key}:</span>{" "}
                       {value
-                        ? badge("Presente", "bg-green-200 text-green-800", securityHeaderTooltips[key] || key)
-                        : badge("Ausente", "bg-red-200 text-red-800", securityHeaderTooltips[key] || key)}
+                        ? badge("Presente", "bg-green-200 text-green-800")
+                        : badge("Ausente", "bg-red-200 text-red-800")}
                       <span className="ml-2">{value || '-'}</span>
                     </div>
                   )
@@ -217,7 +200,7 @@ export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, o
               {renderCookies(httpResult["3. Análisis de Cookies"]?.Cookies || [])}
               <div>
                 <span className="font-semibold">Casos de Uso:</span>{" "}
-                {renderBadges(httpResult["3. Análisis de Cookies"]?.["Casos de Uso"] || [], cookieBadgeTooltip)}
+                {renderBadges(httpResult["3. Análisis de Cookies"]?.["Casos de Uso"] || [], {})}
               </div>
             </div>
             {/* 4. Reglas de Rastreo */}
@@ -274,7 +257,7 @@ export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, o
                   <div className="flex flex-wrap gap-1 mt-1">
                     {(httpResult["4. Reglas de Rastreo"]?.CasosDeUso || []).map((item: string, idx: number) => (
                       <span key={idx} className="mr-1">
-                        {badge(item, 'bg-blue-100 text-blue-800', crawlRuleBadgeTooltip[item] || item)}
+                        {badge(item, 'bg-blue-100 text-blue-800')}
                       </span>
                     ))}
                   </div>
