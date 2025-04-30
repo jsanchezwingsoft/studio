@@ -2,9 +2,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trash2, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ShieldCheck, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ScanResultModal } from './ScanResultModal';
+import { DnsResultModal } from './DnsResultModal';
 import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Input } from '@/components/ui/input';
 import { GenericTable, GenericTableColumn } from '@/components/ui/GenericTable';
@@ -22,6 +23,7 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [viewUrlId, setViewUrlId] = useState<string | null>(null);
+  const [viewDnsUrlId, setViewDnsUrlId] = useState<string | null>(null); // Nuevo estado para DNS modal
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const { toast } = useToast();
@@ -167,6 +169,16 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
           <Button
             size="icon"
             variant="ghost"
+            title="DNS"
+            aria-label="DNS"
+            onClick={() => setViewDnsUrlId(row.url_id)}
+            className="hover:text-primary"
+          >
+            <Globe className="w-5 h-5 text-blue-600" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
             title="Eliminar URL"
             aria-label="Eliminar URL"
             onClick={() => handleDeleteUrl(row.url_id)}
@@ -236,12 +248,20 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
           </Button>
         </div>
       )}
-      {/* Modal de detalles del escaneo */}
+      {/* Modal de detalles del escaneo SSL/TLS */}
       {viewUrlId && (
         <ScanResultModal
           urlId={viewUrlId}
           open={!!viewUrlId}
           onClose={() => setViewUrlId(null)}
+        />
+      )}
+      {/* Modal de detalles del análisis DNS */}
+      {viewDnsUrlId && (
+        <DnsResultModal
+          urlId={viewDnsUrlId}
+          open={!!viewDnsUrlId}
+          onClose={() => setViewDnsUrlId(null)}
         />
       )}
     </div>
