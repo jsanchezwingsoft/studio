@@ -2,11 +2,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trash2, ShieldCheck, Globe, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ShieldCheck, Globe, Lock, ShieldAlert, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ScanResultModal } from './ScanResultModal';
 import { DnsResultModal } from './DnsResultModal';
 import { HttpResultModal } from './HttpResultModal';
+import { VulnResultModal } from './VulnResultModal'; // <-- Importa el modal de vulnerabilidades
 import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Input } from '@/components/ui/input';
 import { GenericTable, GenericTableColumn } from '@/components/ui/GenericTable';
@@ -34,7 +35,8 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
   const [viewUrlId, setViewUrlId] = useState<string | null>(null);
   const [viewDnsUrlId, setViewDnsUrlId] = useState<string | null>(null);
   const [viewHttpUrlId, setViewHttpUrlId] = useState<string | null>(null);
-  const [deleteUrlId, setDeleteUrlId] = useState<string | null>(null); // Estado para modal de confirmación
+  const [viewVulnUrlId, setViewVulnUrlId] = useState<string | null>(null); // <-- Nuevo estado para modal de vulnerabilidades
+  const [deleteUrlId, setDeleteUrlId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const { toast } = useToast();
@@ -200,6 +202,16 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
           <Button
             size="icon"
             variant="ghost"
+            title="Vulnerabilidades"
+            aria-label="Vulnerabilidades"
+            onClick={() => setViewVulnUrlId(row.url_id)}
+            className="hover:text-primary"
+          >
+            <ShieldAlert className="w-5 h-5 text-red-600" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
             title="Eliminar URL"
             aria-label="Eliminar URL"
             onClick={() => setDeleteUrlId(row.url_id)}
@@ -291,6 +303,14 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
           urlId={viewHttpUrlId}
           open={!!viewHttpUrlId}
           onClose={() => setViewHttpUrlId(null)}
+        />
+      )}
+      {/* Modal de detalles del análisis de vulnerabilidades */}
+      {viewVulnUrlId && (
+        <VulnResultModal
+          urlId={viewVulnUrlId}
+          open={!!viewVulnUrlId}
+          onClose={() => setViewVulnUrlId(null)}
         />
       )}
       {/* Modal de confirmación de eliminación */}
