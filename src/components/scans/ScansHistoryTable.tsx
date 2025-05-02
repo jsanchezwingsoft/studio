@@ -2,12 +2,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trash2, ShieldCheck, Globe, Lock, ShieldAlert, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ShieldCheck, Globe, Lock, ShieldAlert, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ScanResultModal } from './ScanResultModal';
 import { DnsResultModal } from './DnsResultModal';
 import { HttpResultModal } from './HttpResultModal';
-import { VulnResultModal } from './VulnResultModal'; // <-- Importa el modal de vulnerabilidades
+import { VulnResultModal } from './VulnResultModal';
+import { SummaryRecommendationsModal } from './SummaryRecommendationsModal';
 import { fetchWrapper } from '@/utils/fetchWrapper';
 import { Input } from '@/components/ui/input';
 import { GenericTable, GenericTableColumn } from '@/components/ui/GenericTable';
@@ -35,7 +36,8 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
   const [viewUrlId, setViewUrlId] = useState<string | null>(null);
   const [viewDnsUrlId, setViewDnsUrlId] = useState<string | null>(null);
   const [viewHttpUrlId, setViewHttpUrlId] = useState<string | null>(null);
-  const [viewVulnUrlId, setViewVulnUrlId] = useState<string | null>(null); // <-- Nuevo estado para modal de vulnerabilidades
+  const [viewVulnUrlId, setViewVulnUrlId] = useState<string | null>(null);
+  const [viewSummaryUrlId, setViewSummaryUrlId] = useState<string | null>(null);
   const [deleteUrlId, setDeleteUrlId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -175,9 +177,9 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
             title="SSL/TLS"
             aria-label="SSL/TLS"
             onClick={() => setViewUrlId(row.url_id)}
-            className="hover:text-primary"
+            className={`hover:text-green-600 ${viewUrlId === row.url_id ? 'text-green-600' : ''}`}
           >
-            <ShieldCheck className="w-5 h-5 text-green-600" />
+            <ShieldCheck className="w-5 h-5" />
           </Button>
           <Button
             size="icon"
@@ -185,9 +187,9 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
             title="DNS"
             aria-label="DNS"
             onClick={() => setViewDnsUrlId(row.url_id)}
-            className="hover:text-primary"
+            className={`hover:text-blue-600 ${viewDnsUrlId === row.url_id ? 'text-blue-600' : ''}`}
           >
-            <Globe className="w-5 h-5 text-blue-600" />
+            <Globe className="w-5 h-5" />
           </Button>
           <Button
             size="icon"
@@ -195,9 +197,9 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
             title="SecurityHttp"
             aria-label="SecurityHttp"
             onClick={() => setViewHttpUrlId(row.url_id)}
-            className="hover:text-primary"
+            className={`hover:text-purple-600 ${viewHttpUrlId === row.url_id ? 'text-purple-600' : ''}`}
           >
-            <Lock className="w-5 h-5 text-purple-600" />
+            <Lock className="w-5 h-5" />
           </Button>
           <Button
             size="icon"
@@ -205,9 +207,19 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
             title="Vulnerabilidades"
             aria-label="Vulnerabilidades"
             onClick={() => setViewVulnUrlId(row.url_id)}
-            className="hover:text-primary"
+            className={`hover:text-red-600 ${viewVulnUrlId === row.url_id ? 'text-red-600' : ''}`}
           >
-            <ShieldAlert className="w-5 h-5 text-red-600" />
+            <ShieldAlert className="w-5 h-5" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            title="Resumen"
+            aria-label="Resumen"
+            onClick={() => setViewSummaryUrlId(row.url_id)}
+            className={`hover:text-cyan-600 ${viewSummaryUrlId === row.url_id ? 'text-cyan-600' : ''}`}
+          >
+            <FileText className="w-5 h-5" />
           </Button>
           <Button
             size="icon"
@@ -311,6 +323,14 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
           urlId={viewVulnUrlId}
           open={!!viewVulnUrlId}
           onClose={() => setViewVulnUrlId(null)}
+        />
+      )}
+      {/* Modal de detalles del resumen de recomendaciones */}
+      {viewSummaryUrlId && (
+        <SummaryRecommendationsModal
+          urlId={viewSummaryUrlId}
+          open={!!viewSummaryUrlId}
+          onClose={() => setViewSummaryUrlId(null)}
         />
       )}
       {/* Modal de confirmación de eliminación */}
