@@ -68,7 +68,9 @@ export const VulnResultModal: React.FC<VulnResultModalProps> = ({ urlId, open, o
       setVulnResult(null);
       setOpenCollapsible(null);
       const accessToken = sessionStorage.getItem('accessToken');
-      fetch(`https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/vuln-result/${urlId}`, {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL || "https://coreapihackanalizerdeveloper.wingsoftlab.com";
+
+      fetch(`${baseUrl}/v1/urlscan/vuln-result/${urlId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

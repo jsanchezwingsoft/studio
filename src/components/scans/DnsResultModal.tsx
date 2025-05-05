@@ -46,8 +46,8 @@ export const DnsResultModal: React.FC<DnsResultModalProps> = ({ urlId, open, onC
       setError(null);
       setDnsResult(null);
       const accessToken = sessionStorage.getItem('accessToken');
-      fetch(`https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/dns-result/${urlId}`, {
-        method: 'GET',
+      fetch(`${process.env.NEXT_PUBLIC_BASE_API_URL}/v1/urlscan/dns-result/${urlId}`, {
+        method: 'GET', 
         headers: {
           'Content-Type': 'application/json',
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),

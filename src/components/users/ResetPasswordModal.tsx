@@ -34,7 +34,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
     try {
       const token = sessionStorage.getItem('accessToken');
       const response = await fetch(
-        `https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/reset-password/${userId}`,
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/v1/users/reset-password/${userId}`,
         {
           method: 'PUT',
           headers: {

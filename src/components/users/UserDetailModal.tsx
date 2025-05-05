@@ -33,7 +33,8 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
       setError(null);
       setUser(null);
       const token = sessionStorage.getItem('accessToken');
-      fetch(`https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/${userId}`, {
+
+      fetch(`${baseUrl}/v1/users/${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

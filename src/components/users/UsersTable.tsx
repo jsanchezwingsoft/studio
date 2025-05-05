@@ -6,6 +6,7 @@ import {
   TableHead,
   TableBody,
   TableCell,
+  TableCaption,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +14,7 @@ import { Eye, KeyRound, Pencil, Trash2 } from 'lucide-react';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import { EditUserModal } from './EditUserModal';
 import { DeleteUserModal } from './DeleteUserModal';
+import { fetchWrapper } from '@/utils/fetchWrapper';
 import { UserDetailModal } from './UserDetailModal'; // <--- NUEVO IMPORT
 
 interface User {
@@ -26,7 +28,6 @@ interface User {
 interface UsersTableProps {
   onViewUser?: (user: User) => void;
 }
-const API_URL = 'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/list-with-roles';
 
 export const UsersTable: React.FC<UsersTableProps> = ({
   onViewUser,
@@ -45,15 +46,17 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     try {
       if (isInitial) setLoading(true);
       else setRefreshing(true);
-      const token = sessionStorage.getItem('accessToken');
-      const response = await fetch(API_URL, {
+      const response = await fetchWrapper(
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/v1/users/list-with-roles`,
+        {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-      });
-      if (!response.ok) throw new Error('Error al obtener los usuarios');
+        }
+      );
+      if (!response || !response.ok) throw new Error('Error al obtener los usuarios');
+      
       const data = await response.json();
       setUsers(data);
     } catch (error) {
@@ -88,6 +91,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
             </div>
           )}
           <Table>
+            <TableCaption>A list of your recent users.</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>

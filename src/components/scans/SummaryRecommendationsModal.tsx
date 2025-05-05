@@ -67,6 +67,8 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<string>('');
   const contentRef = useRef<HTMLDivElement>(null);
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_API_URL || '';
+
 
   useEffect(() => {
     if (open && urlId) {
@@ -75,7 +77,7 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
       setSummary(null);
       setUser(sessionStorage.getItem('username') || '');
       const accessToken = sessionStorage.getItem('accessToken');
-      fetch(`https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/summary-recommendations/${urlId}`, {
+      fetch(`${BASE_URL}/v1/urlscan/summary-recommendations/${urlId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +187,7 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
             if (!urlId) return;
             const accessToken = sessionStorage.getItem('accessToken');
             const res = await fetch(
-              `https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/consolidated-url-info/${urlId}`,
+              `${BASE_URL}/v1/urlscan/consolidated-url-info/${urlId}`,
               {
                 method: 'GET',
                 headers: {

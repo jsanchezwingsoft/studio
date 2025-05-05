@@ -54,7 +54,8 @@ export const ScanResultModal: React.FC<ScanResultModalProps> = ({ urlId, open, o
       setError(null);
       setScanResult(null);
       const accessToken = sessionStorage.getItem('accessToken');
-      fetch(`https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/ssl-result/${urlId}`, {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+      fetch(`${baseUrl}/v1/urlscan/ssl-result/${urlId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

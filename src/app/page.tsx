@@ -42,7 +42,7 @@ const HomePage = () => {
     if (accessToken && refreshToken) {
       try {
         const response = await fetchWrapper(
-          'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/logout',
+          `${process.env.NEXT_PUBLIC_BASE_API_URL}/v1/auth/logout`,
           {
             method: 'POST',
             headers: {

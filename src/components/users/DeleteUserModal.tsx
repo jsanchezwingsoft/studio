@@ -24,11 +24,12 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
   const { toast } = useToast();
 
   const handleDelete = async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
     setLoading(true);
     try {
       const token = sessionStorage.getItem('accessToken');
       const response = await fetch(
-        `https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/delete/${user.user_id}`,
+        `${baseUrl}/v1/users/delete/${user.user_id}`,
         {
           method: 'DELETE',
           headers: {

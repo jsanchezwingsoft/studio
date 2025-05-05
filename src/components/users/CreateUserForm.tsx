@@ -76,7 +76,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({
         phone: newPhone,
       };
       const response = await fetchWrapper(
-        'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/',
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/v1/users/`,
         {
           method: 'POST',
           body: user,

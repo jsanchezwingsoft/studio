@@ -47,7 +47,9 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
     try {
       if (isInitial) setLoading(true);
       else setRefreshing(true);
-      const response = await fetchWrapper('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/user-urls', {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+      
+      const response = await fetchWrapper(`${baseUrl}/v1/urlscan/user-urls`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +101,7 @@ export const ScansHistoryTable: React.FC<{ refresh?: boolean }> = ({ refresh }) 
     try {
       setRefreshing(true);
       const response = await fetchWrapper(
-        `https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/user-urls/${deleteUrlId}`,
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/v1/urlscan/user-urls/${deleteUrlId}`,
         {
           method: 'DELETE',
           headers: {

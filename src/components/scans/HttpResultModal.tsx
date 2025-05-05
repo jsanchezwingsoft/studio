@@ -40,6 +40,7 @@ const securityGradeBadge = (grade: string) => {
 };
 
 export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, onClose }) => {
+
   const [httpResult, setHttpResult] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +51,8 @@ export const HttpResultModal: React.FC<HttpResultModalProps> = ({ urlId, open, o
       setError(null);
       setHttpResult(null);
       const accessToken = sessionStorage.getItem('accessToken');
-      fetch(`https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/http-result/${urlId}`, {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+      fetch(`${baseUrl}/v1/urlscan/http-result/${urlId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

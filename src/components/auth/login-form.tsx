@@ -61,7 +61,8 @@ export function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
     console.log('Login attempt with:', values);
-    const loginEndpoint = 'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/login';
+    const baseURL = process.env.NEXT_PUBLIC_BASE_API_URL;
+    const loginEndpoint = `${baseURL}/v1/auth/login`;
     console.log(`Attempting to POST to: ${loginEndpoint}`);
     try {
       const response = await fetch(loginEndpoint, {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronsLeft, ChevronsRight, Home, LogOut, Mail, Users, UserPlus, FlaskConical, Globe, Settings } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Home, LogOut, Users, UserPlus, FlaskConical, Globe, Settings } from 'lucide-react';
 
 export interface SidebarProps {
   email: string;

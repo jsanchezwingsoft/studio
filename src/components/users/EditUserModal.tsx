@@ -49,7 +49,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
       if (isActive !== user.is_active) body.is_active = isActive;
 
       const response = await fetch(
-        `https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/update/${user.user_id}`,
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/v1/users/update/${user.user_id}`,
         {
           method: 'PUT',
           headers: {

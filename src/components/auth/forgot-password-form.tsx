@@ -41,11 +41,26 @@ export function ForgotPasswordForm() {
     },
   });
   async function onSubmit(values: ForgotPasswordFormValues) {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL || '';
     setIsLoading(true);
-    console.log('Password reset request for:', values.email);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const response = await fetch(`${baseUrl}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: values.email }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to send password reset request.');
+      }
+      await response.json();
+    } catch (error) {
+      console.error('Password reset request error:', error);
+    } finally {
+      setIsLoading(false);
+    }
     toast({
-      title: "Password Reset Email Sent",
       description: `If an account exists for ${values.email}, you will receive password reset instructions.`,
       variant: 'default',
     });

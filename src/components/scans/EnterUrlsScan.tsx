@@ -37,9 +37,10 @@ const EnterUrlsScan: React.FC<EnterUrlsScanProps> = ({ onClose, onScanSuccess })
     setUrl('');
     try {
       const response = await fetchWrapper(
-        'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/detect-protocol',
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/v1/urlscan/detect-protocol` || ``,
         {
           method: 'POST',
+          
           headers: {
             'Content-Type': 'application/json',
           },

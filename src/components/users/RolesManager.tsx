@@ -44,22 +44,24 @@ export const RolesManager: React.FC<RolesManagerProps> = ({
   const [confirmRemove, setConfirmRemove] = useState<{ user_id: string, role_name: string } | null>(null);
   const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+
 
   // Fetch users and roles
   const fetchUsersAndRoles = async () => {
     try {
       setRefreshing(true);
       const usersResponse = await fetchWrapper(
-        'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/users/list-with-roles',
+        `${baseUrl}/v1/users/list-with-roles`,
         { method: 'GET' }
-      );
+      , baseUrl);
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
         setUsers(usersData);
       }
       const rolesResponse = await fetchWrapper(
-        'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/roles/list',
-        { method: 'GET' }
+        `${baseUrl}/v1/roles/list`,
+        { method: 'GET' }, baseUrl
       );
       if (rolesResponse.ok) {
         const rolesData = await rolesResponse.json();
@@ -94,14 +96,14 @@ export const RolesManager: React.FC<RolesManagerProps> = ({
     }
     try {
       const response = await fetchWrapper(
-        'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/roles/assign',
+        `${baseUrl}/v1/roles/assign`,
         {
           method: 'POST',
           body: {
             user_id: selectedUserId,
             role_id: selectedRoleId,
           },
-        }
+        }, baseUrl
       );
       if (response.status >= 200 && response.status < 300) {
         const data = await response.json();
@@ -150,14 +152,14 @@ export const RolesManager: React.FC<RolesManagerProps> = ({
     if (!role) return;
     try {
       const response = await fetchWrapper(
-        'https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/roles/remove',
+        `${baseUrl}/v1/roles/remove`,
         {
           method: 'DELETE',
           body: {
             user_id,
             role_id: role.role_id,
           },
-        }
+        }, baseUrl
       );
       if (response.status >= 200 && response.status < 300) {
         toast({

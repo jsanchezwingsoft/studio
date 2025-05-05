@@ -14,6 +14,9 @@ export const isAuthenticated = (accessToken: string | null): boolean => {
         const tenMinutesInSeconds = 10 * 60;
         return decodedToken.exp - currentTime > tenMinutesInSeconds;
     } catch (error) {
+        console.error("Error decoding token:", error);
+        return false;
+    } catch (error) {
         return false;
     }
 };
@@ -32,7 +35,11 @@ export const fetchWrapper = async (
             return { error: 'not_authenticated' };
         }
         try {
-            const refreshResponse = await fetch('https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/auth/refresh', { 
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+            if (!baseUrl) throw new Error("NEXT_PUBLIC_BASE_API_URL is not set");
+            const refreshUrl = `${baseUrl}/v1/auth/refresh`;
+
+            const refreshResponse = await fetch(refreshUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,12 +74,7 @@ export const fetchWrapper = async (
         (options.headers as Record<string, string>)['Content-Type'] = 'application/json';
     }
 
-    // Logs para depuración
-    // console.log('fetchWrapper headers:', options.headers);
-    // console.log('fetchWrapper body:', options.body);
-
     const response = await fetch(url, options);
-
     if (response.status === 404) {
         return { error: 'not_found', status: 404, message: `Endpoint not found: ${url}` };
     }
