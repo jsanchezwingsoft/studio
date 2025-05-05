@@ -68,12 +68,12 @@ export function LoginForm() {
       const response = await fetch(loginEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json', // CORREGIDO: JSON
+          'Content-Type': 'application/json', 
           'accept': 'application/json',
         },
         body: JSON.stringify({
-          email: values.email,      // CORREGIDO: email
-          password: values.password // CORREGIDO: password
+          email: values.email,      
+          password: values.password 
         }),
       // Sending the email and password to the API
       });
