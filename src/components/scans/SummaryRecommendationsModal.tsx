@@ -9,7 +9,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, Loader2, Info, Star, Award, User, Globe } from 'lucide-react';
+import { FileText, Loader2, Info, Download, User, Globe, Star, Award } from 'lucide-react';
 
 interface SummaryRecommendationsModalProps {
   urlId: string | null;
@@ -116,8 +116,7 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
         ) : error ? (
           <div className="py-6 text-center text-red-600">{error}</div>
         ) : summary ? (
-          <div ref={contentRef} className="py-2 space-y-6 text-base bg-card rounded max-h-[400px] overflow-y-auto pr-2">
-            {/* Sección 1: Resumen ejecutivo */}
+          <div className="py-2 space-y-6 text-base bg-card rounded max-h-[400px] overflow-y-auto pr-2">
             <div className="mb-4 border-b pb-2">
               <div className="text-2xl font-bold mb-2 flex items-center gap-2">
                 Resumen ejecutivo
@@ -125,7 +124,6 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
               </div>
               <div className="ml-2">{summary.resumen || '-'}</div>
             </div>
-            {/* Sección 3: Recomendaciones detalladas */}
             <div className="mb-4 border-b pb-2">
               <span className="font-semibold flex items-center gap-1">
                 Recomendaciones detalladas
@@ -141,7 +139,6 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                 <span className="ml-2 text-muted-foreground">-</span>
               )}
             </div>
-            {/* Sección 2: Puntuación y clasificación solo abajo a la izquierda */}
             <div className="mb-2 flex flex-col sm:flex-row justify-start items-start gap-4">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">Puntuación:</span>
@@ -154,7 +151,6 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                 <Info className="w-4 h-4 text-muted-foreground" title="Clasificación general de seguridad (A+, A, B+, B, etc.)." />
               </div>
             </div>
-            {/* Sección 4: Metadatos */}
             <div className="mb-2 flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
@@ -164,9 +160,9 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4" />
                 <span className="font-semibold">URL del sitio:</span>
-                {resumenUrl ? (
-                  <a href={resumenUrl} target="_blank" rel="noopener noreferrer" className="text-[#017979] font-semibold underline hover:text-[#015e5e]">
-                    {resumenUrl}
+                {summary.resumen ? (
+                  <a href={extractUrlFromResumen(summary.resumen) || '#'} target="_blank" rel="noopener noreferrer" className="text-[#017979] font-semibold underline hover:text-[#015e5e]">
+                    {extractUrlFromResumen(summary.resumen) || '-'}
                   </a>
                 ) : (
                   <span>-</span>
@@ -177,7 +173,6 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                 <span>{new Date().toLocaleString()}</span>
               </div>
             </div>
-            {/* Footer */}
             <div className="mt-4 text-xs text-center text-muted-foreground border-t pt-2">
               <span>Generado por MiniHack Analyzer | wingsoftlab.com</span>
             </div>
@@ -186,6 +181,32 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
           <div className="py-6 text-center text-muted-foreground">No hay datos para mostrar.</div>
         )}
         <DialogFooter>
+          <Button type="button" onClick={async () => {
+            if (!urlId) return;
+            const accessToken = sessionStorage.getItem('accessToken');
+            const res = await fetch(
+              `https://coreapihackanalizerdeveloper.wingsoftlab.com/v1/urlscan/consolidated-url-info/${urlId}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                },
+              }
+            );
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `consolidated_summary_${urlId}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+          }} variant="primary">
+            Descargar
+          </Button>
           <DialogClose asChild>
             <Button type="button" variant="secondary">
               Cerrar
