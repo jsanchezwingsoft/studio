@@ -9,8 +9,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, Loader2, Info, Star, Award, Download, User, Globe } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import { FileText, Loader2, Info, Star, Award, User, Globe } from 'lucide-react';
 
 interface SummaryRecommendationsModalProps {
   urlId: string | null;
@@ -55,7 +54,6 @@ const classificationBadge = (clasificacion: string) => {
   );
 };
 
-// Extrae la primera URL del resumen (si existe)
 const extractUrlFromResumen = (resumen: string): string | null => {
   if (!resumen) return null;
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -96,22 +94,6 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
     }
   }, [open, urlId]);
 
-  const handleDownloadPDF = () => {
-    if (typeof window !== 'undefined' && html2pdf && contentRef.current) {
-      html2pdf()
-        .set({
-          margin: 0.5,
-          filename: `resumen_${urlId}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-        })
-        .from(contentRef.current)
-        .save();
-    }
-  };
-
-  // Extrae la URL del resumen
   const resumenUrl = summary?.resumen ? extractUrlFromResumen(summary.resumen) : null;
 
   return (
@@ -197,16 +179,13 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
             </div>
             {/* Footer */}
             <div className="mt-4 text-xs text-center text-muted-foreground border-t pt-2">
-              <span>Generado por Mini-HackAnalyzer | HackAnalyzer</span>
+              <span>Generado por MiniHack Analyzer | wingsoftlab.com</span>
             </div>
           </div>
         ) : (
           <div className="py-6 text-center text-muted-foreground">No hay datos para mostrar.</div>
         )}
         <DialogFooter>
-          <Button type="button" onClick={handleDownloadPDF} variant="primary">
-            <Download className="w-4 h-4 mr-1" /> Descargar PDF
-          </Button>
           <DialogClose asChild>
             <Button type="button" variant="secondary">
               Cerrar
