@@ -7,14 +7,16 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  // Importa DialogDescription si la usas para accesibilidad
+  DialogDescription // Añadir esta importación si usas <DialogDescription>
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Loader2, Info, Download, User, Globe, Star, Award } from 'lucide-react';
 
+// Importar fetchWrapper
+import { fetchWrapper } from '@/utils/fetchWrapper';
+
 // Importar pdfmake y las fuentes dinámicamente dentro de la función
-// import pdfMake from 'pdfmake/build/pdfmake'; // <-- BORRA esta línea si existe
-// import pdfFonts from 'pdfmake/build/vfs_fonts'; // <-- BORRA esta línea si existe
-// pdfMake.vfs = pdfFonts.pdfMake.vfs; // <-- BORRA esta línea si existe
 
 interface SummaryRecommendationsModalProps {
   urlId: string | null;
@@ -110,25 +112,48 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
       setError(null);
       setSummary(null);
       setUser(sessionStorage.getItem('username') || '');
-      const accessToken = sessionStorage.getItem('accessToken');
-      fetch(`${BASE_URL}/v1/urlscan/summary-recommendations/${urlId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            throw new Error(data.detail || data.message || 'Error al obtener el resumen');
+      // === USAR fetchWrapper para obtener el resumen inicial ===
+      // Este endpoint puede ser diferente al consolidado, pero asumimos que también requiere auth
+      fetchWrapper(`${BASE_URL}/v1/urlscan/summary-recommendations/${urlId}`)
+        .then(async (resOrError) => {
+          if (resOrError && 'error' in resOrError) {
+               if (resOrError.error === 'not_authenticated') {
+                   setError("Su sesión ha expirado. Por favor, inicie sesión de nuevo.");
+                   // Considera redirigir al login aquí si es un error de auth
+               } else if (resOrError.error === 'not_found') {
+                   setError(resOrError.message || 'Resumen no encontrado para este ID.');
+               } else {
+                   setError('Error al obtener el resumen.');
+               }
+               setSummary(null);
+          } else if (resOrError) {
+              const res = resOrError as Response; // Cast para tipado si es necesario
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                const errorMessage = data.detail || data.message || `Error al obtener el resumen (Status: ${res.status})`;
+                 console.error(`Error fetching summary (Status: ${res.status}):`, data);
+                throw new Error(errorMessage);
+              }
+              // Si res.ok es true, los datos son válidos
+              // Asumimos que este endpoint retorna un objeto similar con 'resumen', 'puntuacion', 'clasificacion', 'recomendaciones_detalladas'
+              // Si 'recomendaciones_detalladas' viene como string JSON en este endpoint, necesitarías JSON.parse aquí.
+              // Pero si viene como array directo, úsalo directamente.
+              // Basado en el JSON de ejemplo y el código consolidado, debería ser un array directo.
+              setSummary(data); // Asigna la respuesta completa al estado summary
+          } else {
+               console.error("fetchWrapper retornó un valor inesperado para el resumen:", resOrError);
+               setError('Error inesperado al obtener resumen.');
+               setSummary(null);
           }
-          setSummary(data);
         })
-        .catch((e) => setError(e.message))
+        .catch((e) => {
+           console.error("Error capturado al usar fetchWrapper para el resumen:", e);
+           setError(e.message);
+           setSummary(null);
+        })
         .finally(() => setLoading(false));
     }
-  }, [open, urlId, BASE_URL]);
+  }, [open, urlId, BASE_URL]); // Asegúrate de que BASE_URL esté en las dependencias
 
   const resumenUrl = summary?.resumen ? extractUrlFromResumen(summary.resumen) : null;
 
@@ -150,66 +175,68 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
       pdfMake.vfs = pdfFonts.vfs;
 
 
-      // Obtener los datos consolidados necesarios para el PDF
-      const accessToken = sessionStorage.getItem('accessToken');
-      const res = await fetch(
-        `${BASE_URL}/v1/urlscan/consolidated-url-info/${urlId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          },
-        }
-      );
-      const apiData = await res.json();
+      // === USAR fetchWrapper para obtener los datos consolidados ===
+      const resOrError = await fetchWrapper(`${BASE_URL}/v1/urlscan/consolidated-url-info/${urlId}`);
 
-      if (!res.ok) {
-          throw new Error(apiData.detail || apiData.message || 'Error al obtener los datos consolidados para el PDF');
+      let apiData;
+      if (resOrError && 'error' in resOrError) {
+         if (resOrError.error === 'not_authenticated') {
+             setError("Su sesión ha expirado o requiere autenticación para descargar. Por favor, inicie sesión de nuevo.");
+             return;
+         } else if (resOrError.error === 'not_found') {
+             setError(resOrError.message || 'Datos consolidados no encontrados para este ID.');
+             return;
+         } else {
+              console.error("fetchWrapper retornó un error:", resOrError);
+              setError('Error al obtener datos para el informe PDF.');
+              return;
+         }
+      } else if (resOrError) {
+          const res = resOrError as Response; // Cast para tipado si es necesario
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+             const errorMessage = data.detail || data.message || `Error al obtener datos consolidados (Status: ${res.status})`;
+             console.error(`Error fetching consolidated data (Status: ${res.status}):`, data);
+             throw new Error(errorMessage);
+          }
+          apiData = data; // apiData ahora contiene el objeto completo de la API
+      } else {
+          console.error("fetchWrapper retornó un valor inesperado:", resOrError);
+          setError('Error inesperado al obtener datos para el informe PDF.');
+          return;
       }
 
-      // --- Extraer y asignar datos ---
+
+      // --- Extraer y asignar datos desde apiData ---
+      // Usar ?. para acceso seguro y || '-' para valores por defecto
       const user = sessionStorage.getItem('username') || '-';
       const url = apiData.data?.url_info?.url || '-';
 
-      // Asegúrate de usar las mayúsculas y minúsculas correctas según tu JSON
       const resumen = apiData.data?.summary_recommendations?.Resumen || '-';
       const puntuacion = Number(apiData.data?.summary_recommendations?.Puntuacion) || 0;
-      const clasificacion = apiData.data?.summary_recommendations?.Clasificacion ?? '-'; // Usar ?? '-' para manejar null/undefined
+      const clasificacion = apiData.data?.summary_recommendations?.Clasificacion ?? '-';
 
-      const rawRecomendaciones = apiData.data?.summary_recommendations?.Recomendaciones; // <-- Usar 'R' mayúscula
-      let recomendaciones = [];
-       if (rawRecomendaciones && typeof rawRecomendaciones === 'string') {
-         try {
-           const parsedRecs = JSON.parse(rawRecomendaciones);
-           if (Array.isArray(parsedRecs)) {
-             recomendaciones = parsedRecs;
-           } else {
-             console.error("Parsed recommendations is not an array:", parsedRecs);
-             recomendaciones = [rawRecomendaciones]; // Fallback: mostrar texto crudo en un array
-           }
-         } catch (e) {
-           console.error("Failed to parse recommendations string:", e);
-           recomendaciones = [rawRecomendaciones]; // Fallback: mostrar texto crudo en un array
-         }
-       }
+      // === CORRECCIÓN: Asumimos que Recomendaciones ya es un array del backend ===
+      // Basado en el código backend que parsea json.loads(summary_json)
+      const recomendaciones: string[] = Array.isArray(apiData.data?.summary_recommendations?.Recomendaciones)
+                                         ? apiData.data.summary_recommendations.Recomendaciones.map(item => String(item)) // Asegurar que sean strings
+                                         : (apiData.data?.summary_recommendations?.Recomendaciones ? [String(apiData.data.summary_recommendations.Recomendaciones)] : []); // Fallback: si no es array pero existe, tratar como 1 item; si no existe, array vacío
+      // === FIN CORRECCIÓN ===
 
 
-      // Data de otros scans
       const sslScan = apiData.data?.ssl_scan;
       const dnsScan = apiData.data?.dns_scan;
       const httpScan = apiData.data?.http_scan;
       const vulnScan = apiData.data?.vuln_scan;
 
-      // --- Asignar el valor a 'puertos' ---
-      // Usa los puertos del vulnScan si existen, de lo contrario usa los del sslScan
+      // Asignar puertos (lógica existente)
       puertos = vulnScan?.puertos_abiertos || sslScan?.puertos_abiertos || [];
 
 
       // --- Definición del documento PDF con pdfmake con MEJORAS VISUALES ---
       const docDefinition: any = {
         content: [
-          // --- Encabezado principal (Mejorado) ---
+          // --- Encabezado principal ---
           {
             stack: [
               { text: 'Informe Consolidado de Seguridad', style: 'header' },
@@ -228,21 +255,16 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                   margin: [0, 2, 0, 15] // Margen inferior
               },
             ],
-            margin: [0, 0, 0, 0], // Margen para todo el stack
-            // background: { // Opcional: Fondo de color para el encabezado
-            //     rect: [0, 0, 595, 90], // [x, y, width, height] - ajusta según necesites
-            //     fillColor: '#f0f0f0' // Color gris claro
-            // }
+            margin: [0, 0, 0, 0],
           },
           { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1, lineColor: '#cccccc' }], margin: [0, 0, 0, 20] }, // Línea separadora
 
 
-          // --- Sección Resumen Ejecutivo (Mejorado) ---
+          // --- Sección Resumen Ejecutivo ---
           { text: 'Resumen ejecutivo', style: 'sectionHeader' },
           { text: resumen, style: 'body', margin: [0, 0, 0, 20] }, // Añadir margen inferior
-          // { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }, // Línea separadora ligera
 
-          // --- Sección Puntuación y clasificación (Mejorado) ---
+          // --- Sección Puntuación y clasificación ---
           { text: 'Puntuación y clasificación', style: 'sectionHeader' },
           {
             columns: [
@@ -250,7 +272,7 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                 width: 'auto',
                 text: [
                   { text: 'Puntuación General: ', bold: true },
-                  { text: `${puntuacion}`, color: getPdfColor('score', puntuacion) } // Usar helper de color
+                  { text: `${puntuacion}`, color: getPdfColor('score', puntuacion) }
                 ],
                  margin: [0, 0, 20, 0]
               },
@@ -258,50 +280,31 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                  width: 'auto',
                  text: [
                     { text: 'Clasificación General: ', bold: true },
-                    { text: `${clasificacion}`, color: getPdfColor('class', clasificacion) } // Usar helper de color
+                    { text: `${clasificacion}`, color: getPdfColor('class', clasificacion) }
                  ],
                  margin: [0, 0, 0, 0]
               },
-              // Añadir clasificación SSL y HTTP
               ...(sslScan?.clasificacion ? [{
-                 width: 'auto',
-                 text: [
-                    { text: 'Clasificación SSL: ', bold: true },
-                    { text: `${sslScan.clasificacion}`, color: getPdfColor('class', sslScan.clasificacion) }
-                 ],
-                 margin: [20, 0, 0, 0]
-              }] : []),
+                 width: 'auto', text: [{ text: 'Clasificación SSL: ', bold: true }, { text: `${sslScan.clasificacion}`, color: getPdfColor('class', sslScan.clasificacion) }], margin: [20, 0, 0, 0] }] : []),
                ...(httpScan?.security_grade ? [{
-                 width: 'auto',
-                 text: [
-                    { text: 'Calificación HTTP: ', bold: true },
-                    { text: `${httpScan.security_grade}`, color: getPdfColor('security_grade', httpScan.security_grade) }
-                 ],
-                 margin: [20, 0, 0, 0]
-               }] : []),
+                 width: 'auto', text: [{ text: 'Calificación HTTP: ', bold: true }, { text: `${httpScan.security_grade}`, color: getPdfColor('security_grade', httpScan.security_grade) }], margin: [20, 0, 0, 0] }] : []),
             ],
-             margin: [0, 0, 0, 20] // Margen inferior
+             margin: [0, 0, 0, 20]
           },
-          // { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }, // Línea separadora ligera
 
 
-          // --- Sección Recomendaciones detalladas (Mejorado) ---
+          // --- Sección Recomendaciones detalladas ---
           { text: 'Recomendaciones detalladas', style: 'sectionHeader' },
           recomendaciones.length > 0
-            ? {
-                ul: recomendaciones.map((rec: string) => ({ text: rec, margin: [0, 2] })),
-                margin: [0, 0, 0, 20] // Margen inferior
-              }
-            : { text: '-', style: 'body', margin: [0, 0, 0, 20] }, // Margen inferior
-           // { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }, // Línea separadora ligera
+            ? { ul: recomendaciones.map((rec: string) => ({ text: rec, margin: [0, 2] })), margin: [0, 0, 0, 20] }
+            : { text: '-', style: 'body', margin: [0, 0, 0, 20] },
 
 
-          // --- Secciones de Detalles (Más Mejorado Visualmente) ---
+          // --- Secciones de Detalles ---
 
-          // Sección Detalles SSL/TLS
-          ...(sslScan ? [{ // Solo añadir esta sección si hay datos SSL
+          ...(sslScan ? [{
             stack: [
-               { text: 'Detalles SSL/TLS', style: 'sectionHeader', margin: [0, 15, 0, 5] }, // Margen superior
+               { text: 'Detalles SSL/TLS', style: 'sectionHeader', margin: [0, 15, 0, 5] },
                { columns: [{text: 'Protocolo:', bold: true, width: '30%'}, {text: sslScan.protocolo || '-', width: '*'}], margin: [0, 2] },
                { columns: [{text: 'Cifrado:', bold: true, width: '30%'}, {text: sslScan.cifrado || '-', width: '*'}], margin: [0, 2] },
                { columns: [{text: 'Tamaño Clave:', bold: true, width: '30%'}, {text: sslScan.tamano_clave ? `${sslScan.tamano_clave} bits` : '-', width: '*'}], margin: [0, 2] },
@@ -310,20 +313,16 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                { columns: [{text: 'Validez:', bold: true, width: '30%'}, {text: `${sslScan.validez_desde || '-'} hasta ${sslScan.validez_hasta || '-'}` , width: '*'},], margin: [0, 2] },
                { columns: [{text: 'Estado de Validez:', bold: true, width: '30%'}, {text: sslScan.validez_estado || '-', width: '*'}], margin: [0, 2] },
                { columns: [{text: 'Emisor:', bold: true, width: '30%'}, {text: sslScan.emisor || '-', width: '*'}], margin: [0, 2] },
-               { columns: [{text: 'Revocación:', bold: true, width: '30%'}, {text: sslScan.revocacion || '-', width: '*'}], margin: [0, 2] },
+               { columns: [{text: 'Revocación:', bold: true, width: '30%'}, {text: sslScan.revocacion || '-'}], margin: [0, 2] },
                { columns: [{text: 'Autofirmado:', bold: true, width: '30%'}, {text: sslScan.autofirmado !== undefined ? (sslScan.autofirmado ? 'Sí' : 'No') : '-', width: '*'}], margin: [0, 2] },
                { columns: [{text: 'Calificación Seguridad:', bold: true, width: '30%'}, {text: sslScan.calificacion_seguridad || '-', width: '*'}], margin: [0, 2] },
                ...(sslScan.recomendaciones ? [{ columns: [{text: 'Recomendaciones SSL:', bold: true, width: '30%'}, {text: sslScan.recomendaciones, width: '*'}], margin: [0, 2] }] : []),
-            ],
-             margin: [0, 0, 0, 20] // Margen inferior
-          }] : []),
-           ...(sslScan ? [{ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }] : []), // Línea separadora
+            ], margin: [0, 0, 0, 20]
+          }] : []), ...(sslScan ? [{ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }] : []),
 
-
-          // Sección Detalles DNS y WHOIS
-          ...(dnsScan ? [{ // Solo añadir esta sección si hay datos DNS
+          ...(dnsScan ? [{
              stack: [
-                { text: 'Detalles DNS y WHOIS', style: 'sectionHeader', margin: [0, 15, 0, 5] }, // Margen superior
+                { text: 'Detalles DNS y WHOIS', style: 'sectionHeader', margin: [0, 15, 0, 5] },
                 { text: 'Registros DNS:', style: 'body', bold: true, margin: [0,5,0,2] },
                 ...(dnsScan.registros_a?.length > 0 ? [{ text: 'A:', style: 'body', margin: [0,2,0,0] }, { ul: dnsScan.registros_a, margin: [10,0,0,5], fontSize: 11 }] : []),
                 ...(dnsScan.registros_aaaa?.length > 0 ? [{ text: 'AAAA:', style: 'body', margin: [0,2,0,0] }, { ul: dnsScan.registros_aaaa, margin: [10,0,0,5], fontSize: 11 }] : []),
@@ -345,84 +344,54 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                  { columns: [{text: 'Organización (WHOIS):', bold: true, width: '30%'}, {text: dnsScan.whois_organizacion || '-', width: '*'}], margin: [0, 2] },
                  { columns: [{text: 'País (WHOIS):', bold: true, width: '30%'}, {text: dnsScan.whois_pais || '-', width: '*'}], margin: [0, 2] },
                  ...(dnsScan.whois_error ? [{ columns: [{text: 'Error WHOIS:', bold: true, width: '30%'}, {text: dnsScan.whois_error, width: '*'}], margin: [0, 2] }] : []),
-             ],
-             margin: [0, 0, 0, 20] // Margen inferior
-          }] : []),
-          ...(dnsScan ? [{ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }] : []), // Línea separadora
+             ], margin: [0, 0, 0, 20]
+          }] : []), ...(dnsScan ? [{ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }] : []),
 
-
-           // Sección Detalles HTTP y Seguridad
-          ...(httpScan ? [{ // Solo añadir esta sección si hay datos HTTP
+           ...(httpScan ? [{
              stack: [
-                { text: 'Detalles HTTP y Seguridad', style: 'sectionHeader', margin: [0, 15, 0, 5] }, // Margen superior
+                { text: 'Detalles HTTP y Seguridad', style: 'sectionHeader', margin: [0, 15, 0, 5] },
                 { columns: [{text: 'Calificación Seguridad HTTP:', bold: true, width: '30%'}, {text: httpScan.security_grade || '-', width: '*'}], margin: [0, 5] },
 
                 { text: 'Cabeceras de Seguridad HTTP:', style: 'body', bold: true, margin: [0,10,0,2] },
-                 // Iterar sobre http_security object
-                ...(httpScan.http_security && Object.keys(httpScan.http_security).length > 0 ? [{ // Añadir check de length
+                ...(httpScan.http_security && Object.keys(httpScan.http_security).length > 0 ? [{
                   ul: Object.entries(httpScan.http_security).map(([key, value]) =>
-                     ({ text: [{text: `${key}: `, bold: true}, `${value || '-'} `], margin: [0,1], fontSize: 11 }) // Ajusta tamaño para cabeceras largas
-                  ),
-                  margin: [0,0,0,10]
+                     ({ text: [{text: `${key}: `, bold: true}, `${value || '-'} `], margin: [0,1], fontSize: 11 })
+                  ), margin: [0,0,0,10]
                 }] : [{ text: '- No hay cabeceras de seguridad HTTP destacadas.', style: 'body', margin: [10,0,0,10], italics: true }]),
 
-
                  { text: 'Reglas robots.txt:', style: 'body', bold: true, margin: [0,10,0,2] },
-                 { text: httpScan.crawl_rules?.['robots.txt'] || 'No disponible', style: 'body', margin: [0,0,0,10], fontSize: 11 }, // Mostrar contenido robots.txt
+                 { text: httpScan.crawl_rules?.['robots.txt'] || 'No disponible', style: 'body', margin: [0,0,0,10], fontSize: 11 },
 
-                 // Puedes añadir social tags, cookies, redirects, etc. si son importantes para el informe
-
-                 // Ejemplo: Social Tags (solo los presentes)
                  ...(httpScan.social_tags && Object.keys(httpScan.social_tags).length > 0 ? [{
                      text: 'Meta Tags (Social/SEO):', style: 'body', bold: true, margin: [0,10,0,2]
                  }, {
                      ul: Object.entries(httpScan.social_tags).map(([key, value]) =>
                          ({ text: [{text: `${key}: `, bold: true}, `${value || '-'} `], margin: [0,1], fontSize: 11 })
-                     ),
-                     margin: [0,0,0,10]
+                     ), margin: [0,0,0,10]
                  }] : []),
 
-                  // Ejemplo: Redirects
-                 ...(httpScan.redirects?.length > 0 ? [{
+                  ...(httpScan.redirects?.length > 0 ? [{
                      text: 'Redirecciones:', style: 'body', bold: true, margin: [0,10,0,2]
-                 }, {
-                     ul: httpScan.redirects.map((redirect: string) => redirect),
-                     margin: [0,0,0,10], fontSize: 11
-                 }] : []),
+                  }, { ul: httpScan.redirects.map((redirect: string) => redirect), margin: [0,0,0,10], fontSize: 11 }] : []),
 
-                  // Ejemplo: Errores HTTP Scan
-                 ...(httpScan.errors?.length > 0 ? [{
+                  ...(httpScan.errors?.length > 0 ? [{
                       text: 'Errores HTTP Scan:', style: 'body', bold: true, margin: [0,10,0,2], color: 'red'
-                  }, {
-                      ul: httpScan.errors.map((error: string) => error),
-                      margin: [0,0,0,10], fontSize: 11, color: 'red'
-                  }] : []),
+                  }, { ul: httpScan.errors.map((error: string) => error), margin: [0,0,0,10], fontSize: 11, color: 'red' }] : []),
 
-             ],
-             margin: [0, 0, 0, 20] // Margen inferior
-          }] : []),
-           ...(httpScan ? [{ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }] : []), // Línea separadora
+             ], margin: [0, 0, 0, 20]
+          }] : []), ...(httpScan ? [{ canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#eeeeee' }], margin: [0, 0, 0, 20] }] : []),
 
 
-          // --- Sección Puertos abiertos (Mejorado) ---
-          // Usar la variable 'puertos' y su length para la condición
+          // --- Sección Puertos abiertos ---
            ...(puertos.length > 0 ? [{
               stack: [
-                { text: 'Puertos abiertos', style: 'sectionHeader', margin: [0, 15, 0, 5] }, // Margen superior
+                { text: 'Puertos abiertos', style: 'sectionHeader', margin: [0, 15, 0, 5] },
                  {
                     table: {
-                      widths: ['auto', '*', '*', '*', '*'], // Ajusta anchos según necesidad
+                      widths: ['auto', '*', '*', '*', '*'],
                       headerRows: 1,
                       body: [
-                        // Fila de encabezados de tabla con estilo
-                        [
-                          { text: 'Puerto', style: 'tableHeader' },
-                          { text: 'Servicio', style: 'tableHeader' },
-                          { text: 'Producto', style: 'tableHeader' },
-                          { text: 'Versión', style: 'tableHeader' },
-                          { text: 'CPE', style: 'tableHeader' }
-                        ],
-                        // Filas de datos con posible striping
+                        [ { text: 'Puerto', style: 'tableHeader' }, { text: 'Servicio', style: 'tableHeader' }, { text: 'Producto', style: 'tableHeader' }, { text: 'Versión', style: 'tableHeader' }, { text: 'CPE', style: 'tableHeader' } ],
                         ...(puertos.map((p: any, index: number) => [
                            { text: p.port || '-', style: (index % 2 === 0 ? 'tableBodyOdd' : 'tableBodyEven') },
                            { text: p.service || '-', style: (index % 2 === 0 ? 'tableBodyOdd' : 'tableBodyEven') },
@@ -432,109 +401,65 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                         ]))
                       ]
                     },
-                     // Diseño de tabla personalizado para un look más limpio y striping
                     layout: {
-                        hLineWidth: function(i: number, node: any) { return (i === 0 || i === node.table.body.length) ? 0.8 : 0.4; }, // Líneas horizontales más gruesas arriba/abajo
-                        vLineWidth: function(i: number, node: any) { return 0; }, // Sin líneas verticales
-                        hLineColor: function(i: number, node: any) { return (i === 0 || i === node.table.body.length) ? '#aaaaaa' : '#dddddd'; }, // Color de líneas
+                        hLineWidth: function(i: number, node: any) { return (i === 0 || i === node.table.body.length) ? 0.8 : 0.4; },
+                        vLineWidth: function(i: number, node: any) { return 0; },
+                        hLineColor: function(i: number, node: any) { return (i === 0 || i === node.table.body.length) ? '#aaaaaa' : '#dddddd'; },
                         vLineColor: function(i: number, node: any) { return '#dddddd'; },
-                        // fill color handled by row styles
+                        fillColor: function(rowIndex: number, node: any, columnIndex: number) { return (rowIndex === 0) ? '#f5f5f5' : null; }, // Fondo solo para el header
                         paddingLeft: function(i: number, node: any) { return 8; },
                         paddingRight: function(i: number, node: any) { return 8; },
                         paddingTop: function(i: number, node: any) { return 5; },
                         paddingBottom: function(i: number, node: any) { return 5; },
                     },
-                    margin: [0, 0, 0, 20] // Margen inferior
+                    margin: [0, 0, 0, 20]
                   }
                ]
            }] : [{ text: 'Puertos abiertos', style: 'sectionHeader', margin: [0, 15, 0, 5] }, { text: '- No se detectaron puertos abiertos', style: 'body', margin: [0, 0, 0, 20] }]),
 
 
-          // --- Sección Vulnerabilidades agrupadas (Mejorado) ---
-           ...(vulnScan?.vulnerabilidades?.length > 0 ? [{ // Mostrar solo si hay vulnerabilidades
+          // --- Sección Vulnerabilidades agrupadas ---
+           ...(vulnScan?.vulnerabilidades?.length > 0 ? [{
                stack: [
-                  { text: 'Vulnerabilidades detectadas por servicio/puerto', style: 'sectionHeader', margin: [0, 15, 0, 5] }, // Margen superior
+                  { text: 'Vulnerabilidades detectadas por servicio/puerto', style: 'sectionHeader', margin: [0, 15, 0, 5] },
                   ...vulnScan.vulnerabilidades.map((grupo: any) => ({
                     stack: [
-                      { text: `> ${grupo.puerto_servicio}`, style: 'body', bold: true, margin: [0, 5, 0, 2] }, // Estilo para el encabezado de grupo
-                      grupo.cves?.length > 0 // Usar ?.length para verificar si es un array
+                      { text: `> ${grupo.puerto_servicio}`, style: 'body', bold: true, margin: [0, 5, 0, 2] },
+                      grupo.cves?.length > 0
                         ? {
-                            // Usar un stack para cada CVE para agrupar detalles
                             stack: grupo.cves.map((cve: any) => ({
                               stack: [
                                 { text: `CVE: ${cve.cve_id || 'N/A'}`, bold: true, fontSize: 11 },
-                                // Usar columns para alinear etiquetas y valores de detalles de CVE
                                 ...(cve.severidad ? [{ columns: [{ text: 'Severidad:', bold: true, width: 'auto' }, { text: cve.severidad, width: '*', color: getPdfColor('severity', cve.severidad) }], margin: [10, 0, 0, 0], fontSize: 11 }] : []),
                                  ...(cve.cwe && cve.cwe.length > 0 ? [{ columns: [{ text: 'CWE:', bold: true, width: 'auto' }, { text: cve.cwe.join(', ') || '-', width: '*' }], margin: [10, 0, 0, 0], fontSize: 11 }] : []),
                                 ...(cve.descripcion ? [{ columns: [{ text: 'Descripción:', bold: true, width: 'auto' }, { text: cve.descripcion || '-', width: '*' }], margin: [10, 0, 0, 0], fontSize: 11 }] : []),
                                 ...(cve.enlace_cve ? [{ columns: [{ text: 'Enlace:', bold: true, width: 'auto' }, { text: cve.enlace_cve, link: cve.enlace_cve, color: 'blue', width: '*' }], margin: [10, 0, 0, 0], fontSize: 11 }] : []),
                                 ...(cve.referencias && cve.referencias.length > 0 ? [
-                                    { text: 'Referencias:', bold: true, margin: [10, 5, 0, 0], fontSize: 11 }, // Referencias Label
-                                    { ul: cve.referencias.map((ref: string) => ({ text: ref || '-', margin: [0, 0, 0, 0] })), margin: [20,0,0,5], fontSize: 10 } // Lista de referencias indentada
+                                    { text: 'Referencias:', bold: true, margin: [10, 5, 0, 0], fontSize: 11 },
+                                    { ul: cve.referencias.map((ref: string) => ({ text: ref || '-', margin: [0, 0, 0, 0] })), margin: [20,0,0,5], fontSize: 10 }
                                   ] : []),
-                              ],
-                              margin: [0, 0, 0, 8], // Espacio entre CVEs dentro del grupo
-                              // border: [false, false, false, true], // Opcional: línea inferior para cada CVE
-                              // borderColor: ['#eeeeee'],
-                              // lineWidth: 0.5,
-                              // paddingBottom: 5
+                              ], margin: [0, 0, 0, 8],
                             }))
                           }
                         : { text: '- No se encontraron CVEs relevantes para este servicio.', margin: [10, 5], italics: true, fontSize: 11 }
-                    ],
-                    margin: [0, 0, 0, 15] // Espacio entre grupos de vulnerabilidades
+                    ], margin: [0, 0, 0, 15]
                   }))
                ]
            }] : [{ text: 'Vulnerabilidades detectadas por servicio/puerto', style: 'sectionHeader', margin: [0, 15, 0, 5] }, { text: '- No se detectaron vulnerabilidades conocidas.', style: 'body', margin: [0, 0, 0, 20] }]),
 
 
         ],
-        // --- Estilos (Mejorado) ---
+        // --- Estilos ---
         styles: {
-          header: {
-            fontSize: 26, // Título más grande
-            bold: true,
-            margin: [0, 0, 0, 5], // Espacio después
-             color: '#333333'
-          },
-           subheader: {
-            fontSize: 10,
-            margin: [0, 1, 0, 1], // Espacio entre líneas de subencabezado
-            color: '#555555'
-          },
-          sectionHeader: {
-            fontSize: 18, // Encabezados de sección más grandes
-            bold: true,
-            margin: [0, 20, 0, 10], // Más espacio arriba, espacio abajo
-            color: '#333333'
-            // Opcional: Fondo de color para encabezados de sección
-            // background: '#f5f5f5',
-            // padding: [5, 10, 5, 10] // Relleno si usas background
-          },
-          body: {
-              fontSize: 12,
-              lineHeight: 1.4 // Mayor interlineado para legibilidad
-          },
-          tableHeader: { // Estilo para los encabezados de la tabla
-                bold: true,
-                fontSize: 10,
-                color: '#555555'
-                // background color handled by layout
-          },
-           tableBodyOdd: { // Estilo para filas impares (sin fondo)
-               fontSize: 10, // Tamaño de fuente para datos de tabla
-               // background color handled by layout
-           },
-            tableBodyEven: { // Estilo para filas pares (fondo ligero)
-               fontSize: 10,
-                // background color handled by layout
-           },
+          header: { fontSize: 26, bold: true, margin: [0, 0, 0, 5], color: '#333333' },
+          subheader: { fontSize: 10, margin: [0, 1, 0, 1], color: '#555555' },
+          sectionHeader: { fontSize: 18, bold: true, margin: [0, 20, 0, 10], color: '#333333' },
+          body: { fontSize: 12, lineHeight: 1.4 },
+          tableHeader: { bold: true, fontSize: 10, color: '#555555' },
+          tableBodyOdd: { fontSize: 10 }, // Estilo sin fondo explícito para filas impares
+          tableBodyEven: { fontSize: 10, fillColor: '#f9f9f9' }, // Gris muy claro para striping en filas pares
         },
-        defaultStyle: { // Estilo por defecto para todo el documento
-            font: 'Roboto',
-            fontSize: 12,
-            lineHeight: 1.4 // Interlineado por defecto
-        },
+        defaultStyle: { font: 'Roboto', fontSize: 12, lineHeight: 1.4 },
         // Pie de página
          footer: function(currentPage: number, pageCount: number) {
              return {
@@ -548,19 +473,25 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
          }
       };
 
+
       // Crear y descargar el PDF
       pdfMake.createPdf(docDefinition).download(`analisis_detallado_${urlId}.pdf`);
 
     } catch (err) {
-      console.error("Error al generar el PDF con pdfmake:", err);
-      // Mostrar un mensaje de error en la UI
-      setError("No se pudo generar el informe PDF. Por favor, inténtalo de nuevo.");
+      console.error("Error capturado al generar el PDF:", err);
+      setError(err.message || "No se pudo generar el informe PDF debido a un error inesperado. Por favor, inténtalo de nuevo.");
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl w-full">
+         {/* === Añadir DialogDescription para accesibilidad === */}
+         <DialogDescription className="sr-only">
+             {/* Texto descriptivo para lectores de pantalla, puede ser simple */}
+             Informe consolidado de seguridad para la URL analizada.
+         </DialogDescription>
+         {/* === Fin DialogDescription === */}
         <DialogHeader>
           <DialogTitle>
             <span className="flex items-center gap-2">
@@ -591,7 +522,9 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                 Recomendaciones detalladas
                 <Info className="w-4 h-4 text-muted-foreground" title="Acciones sugeridas para mejorar la seguridad y reducir riesgos." />
               </span>
-              {summary.recomendaciones_detalladas && summary.recomendaciones_detalladas.length > 0 ? (
+              {/* Usar el summary cargado en el estado para mostrar las recomendaciones */}
+              {/* Asumimos que summary.recomendaciones_detalladas ya es un array */}
+              {Array.isArray(summary.recomendaciones_detalladas) && summary.recomendaciones_detalladas.length > 0 ? (
                 <ul className="list-disc pl-5 text-base space-y-1 break-all">
                   {summary.recomendaciones_detalladas.map((rec: string, idx: number) => (
                     <li key={idx}>{rec}</li>
@@ -601,7 +534,7 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
                 <span className="ml-2 text-muted-foreground">-</span>
               )}
             </div>
-            {/* Aquí se usan tus funciones de badge con tu diseño */}
+            {/* Resto de la UI que usa 'summary' del estado */}
             <div className="mb-2 flex flex-col sm:flex-row justify-start items-start gap-4">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">Puntuación:</span>
@@ -633,7 +566,7 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">Fecha del análisis:</span>
-                <span>{new Date().toLocaleString()}</span>
+                <span>{new Date().toLocaleString()}</span> {/* Note: This shows current time, not scan time from API */}
               </div>
             </div>
             <div className="mt-4 text-xs text-center text-muted-foreground border-t pt-2">
@@ -644,7 +577,7 @@ export const SummaryRecommendationsModal: React.FC<SummaryRecommendationsModalPr
           <div className="py-6 text-center text-muted-foreground">No hay datos para mostrar.</div>
         )}
         <DialogFooter>
-           {/* Deshabilita el botón si no hay resumen cargado */}
+           {/* Deshabilita el botón si no hay summary cargado */}
           <Button type="button" onClick={handleDownloadPDF} variant="primary" disabled={loading || !summary}>
              <Download className="mr-2 h-4 w-4" /> Descargar Informe PDF
           </Button>
